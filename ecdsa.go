@@ -64,7 +64,29 @@ func CreateParticipants(curve elliptic.Curve, config *Config) (participants []*P
 			return
 		}
 		participants[i] = participant
-		pubMeta.PubKeys[i] = participant.pki
+		pubMeta.PubKeys[i] = participant.Yi
 	}
+	// Create alpha and y
+	var alpha []byte
+	y := new(Point)
+	for i, p := range participants {
+		if i == 0 {
+			alpha, err = p.AlphaI()
+			if err != nil {
+				return
+			}
+			y = p.Yi
+		} else {
+			alpha2, err := p.AlphaI()
+			if err != nil {
+				return
+			}
+			alpha = gaillier.Add(paillierPK, alpha, alpha2)
+			yx, yy := curve.Add(p.Yi.x, p.Yi.y, y.x, y.y)
+			y.x, y.y = yx, yy
+		}
+	}
+	pubMeta.Alpha = alpha
+	pubMeta.Y = y
 	return
 }

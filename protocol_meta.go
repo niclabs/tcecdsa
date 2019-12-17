@@ -16,6 +16,8 @@ type PubMeta struct {
 	NTilde     *big.Int // Used in ZK Proofs
 	H1         *big.Int // Used in ZK Proofs
 	H2         *big.Int // Used in ZK Proofs
+	Alpha      []byte
+	Y          *Point
 }
 
 // Returns Curve Subfield bitlength

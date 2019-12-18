@@ -7,9 +7,10 @@ import (
 	"math/big"
 )
 
-type PubMeta struct {
+type KeyMeta struct {
 	T          uint8
 	PaillierPK *gaillier.PubKey
+	N          *big.Int
 	Curve      elliptic.Curve
 	RandomSrc  io.Reader
 	PubKeys    []*Point
@@ -21,15 +22,6 @@ type PubMeta struct {
 }
 
 // Returns Curve Subfield bitlength
-func (p *PubMeta) Q() *big.Int {
+func (p *KeyMeta) Q() *big.Int {
 	return p.Curve.Params().N
-}
-
-// Returns Paillier Keysize
-func (p *PubMeta) N() *big.Int {
-	return new(big.Int).Exp(p.Q(), big.NewInt((3*int64(p.T) + 2)), nil)
-}
-
-type PrivMeta struct {
-	PaillierSK *gaillier.PrivKey
 }

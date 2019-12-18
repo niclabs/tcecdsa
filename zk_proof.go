@@ -6,7 +6,7 @@ import (
 )
 
 type ZKProof interface {
-	Verify() bool
+	Verify() error
 }
 
 type RandValues struct {
@@ -50,7 +50,7 @@ type MiddleZKProof struct {
 func NewFirstZKProof(p Participant) (*FirstZKProof, error) {
 	h1 := p.params.H1
 	h2 := p.params.H2
-	x1 := p.xi
+	x1 := p.x
 	randValues, err := newRandomValues(p)
 	if err != nil {
 		return nil, err

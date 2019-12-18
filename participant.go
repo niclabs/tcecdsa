@@ -1,32 +1,26 @@
 package tcecdsa
 
 import (
+	"crypto/rand"
 	"github.com/actuallyachraf/gomorph/gaillier"
 	"math/big"
 )
 
 type Participant struct {
 	Index  uint8
-	Ki     *big.Int
-	Zi     *big.Int
-	xi     *big.Int
-	Yi     *Point
-	round  int
-	params *PubMeta
+	Rho    *big.Int
+	Z      *big.Int
+	x      *big.Int
+	Y      *Point
+	Round  int
+	params *KeyMeta
 }
-
-type RoundParams struct {
-	A, B, AHat, BHat map[uint8][]byte
-	R map[uint8]*Point
-	PI map[uint8][]byte
-}
-
 
 func (p *Participant) checkComplete() error {
 	return nil
 }
 
-func newParticipant(i uint8, params *PubMeta) (participant *Participant, err error) {
+func newParticipant(i uint8, params *KeyMeta) (participant *Participant, err error) {
 	xi, err := randFieldElement(params.Curve, params.RandomSrc)
 	xix, xiy := params.Curve.ScalarBaseMult(xi.Bytes())
 	if err != nil {
@@ -34,81 +28,62 @@ func newParticipant(i uint8, params *PubMeta) (participant *Participant, err err
 	}
 	return &Participant{
 		Index:  i,
-		xi:     xi,
-		Yi:     &Point{xix, xiy},
+		x:      xi,
+		Y:      &Point{xix, xiy},
 		params: params,
 	}, nil
 }
 
-
-
 func (p *Participant) AlphaI() ([]byte, error) {
-	a, err := gaillier.Encrypt(p.params.PaillierPK, p.xi.Bytes())
+	a, err := gaillier.Encrypt(p.params.PaillierPK, p.x.Bytes())
 	if err != nil {
 		return nil, err
 	}
 	return a, nil
 }
 
-// Round 1, Rounds 2 to t-1 and part of Round t (k_t generation)
-func (p *Participant) SignRound1(M string, params RoundParams) (RoundParams, error) {
+func (p *Participant) SignRound1(M string) (u, v []byte, zk ZKProof, err error) {
 	if err := p.checkComplete(); err != nil {
-		return RoundParams{}, err
+		return
 	}
-	// Chooses Ki \in Zq and computes Zi = Ki^-1 mod q
-	ki, err := randFieldElement(p.params.Curve, p.params.RandomSrc)
+	// Chooses randomly Rho \in Zq and computes Z = Rho^-1 mod q
+	rho, err := randFieldElement(p.params.Curve, p.params.RandomSrc)
 	if err != nil {
-		return RoundParams{}, err
+		return
 	}
-	p.Ki = ki
-	zi := new(big.Int).ModInverse(ki, p.params.Curve.Params().N)
-	p.Zi = zi
-	xizi := new(big.Int).Mod(new(big.Int).Mul(p.xi, zi), p.params.Curve.Params().N)
-	if p.Index == 0 {
-		a, err := gaillier.Encrypt(p.params.PaillierPK, zi.Bytes())
-		if err != nil {
-			return RoundParams{}, err
-		}
-		b, err := gaillier.Encrypt(p.params.PaillierPK, xizi.Bytes())
-		if err != nil {
-			return RoundParams{}, err
-		}
-		params.A[p.Index] = a
-		params.B[p.Index] = b
-		params.AHat[p.Index] = nil
-		params.BHat[p.Index] = nil
-	} else if p.Index < p.params.T - 1 {
-		a := gaillier.Mul(p.params.PaillierPK, params.A[p.Index- 1], zi.Bytes())
-		b := gaillier.Mul(p.params.PaillierPK, params.B[p.Index- 1], xizi.Bytes())
-		aHat, err := gaillier.Encrypt(p.params.PaillierPK, zi.Bytes())
-		if err != nil {
-			return RoundParams{}, err
-		}
-		bHat, err := gaillier.Encrypt(p.params.PaillierPK, xizi.Bytes())
-		if err != nil {
-			return RoundParams{}, err
-		}
-		params.A[p.Index] = a
-		params.B[p.Index] = b
-		params.AHat[p.Index] = aHat
-		params.BHat[p.Index] = bHat
+	p.Rho = rho
+	u, err = gaillier.Encrypt(p.params.PaillierPK, rho.Bytes())
+	if err != nil {
+		return
 	}
-	return params, nil
+	v = gaillier.Mul(p.params.PaillierPK, p.params.Alpha, p.Rho.Bytes())
+	// TODO zkproofs
+	return
 }
 
-// Rounds t+1 to 2t-2 and part of Round 2t-1 (R_1 generation)
-func (p *Participant) SignRound2(params RoundParams) (RoundParams, error) {
-	if p.Index == p.params.T - 1 {
-		pix, piy := p.params.Curve.ScalarBaseMult(p.Ki.Bytes())
-		params.R[p.Index] = &Point{pix, piy}
-	} else {
-		g := params.R[p.Index+ 1]
-		pix, piy := p.params.Curve.ScalarMult(g.x, g.y, p.Ki.Bytes())
-		params.R[p.Index] = &Point{pix, piy}
+// Round 3 in protocol
+func (p *Participant) SignRound2(u, v []byte) (ri *Point, wi []byte, zk ZKProof, err error) {
+	ki, err := rand.Int(p.params.RandomSrc, p.params.Q())
+	if err != nil {
+		return
 	}
-	return params, nil
+	q6 := new(big.Int).Exp(p.params.Q(), big.NewInt(6), nil)
+	ci, err := rand.Int(p.params.RandomSrc, new(big.Int).Mul(q6, big.NewInt(2)))
+	if err != nil {
+		return
+	}
+	ci.Sub(p.params.Q(), q6)
+	rix, riy := p.params.Curve.ScalarBaseMult(ki.Bytes())
+	ri = &Point{rix, riy}
+
+	ciq := new(big.Int).Mul(ci, p.params.Q())
+	encrypted_ciq, err := gaillier.Encrypt(p.params.PaillierPK, ciq.Bytes())
+	if err != nil {
+		return
+	}
+	kiu := gaillier.Mul(p.params.PaillierPK, u, ki.Bytes())
+	wi = gaillier.Add(p.params.PaillierPK, kiu, encrypted_ciq)
+	// TODO ZKProof
+	return
 }
 
-func (p *Participant) SignRound3(params RoundParams) {
-
-}

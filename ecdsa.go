@@ -43,10 +43,11 @@ func CreateParticipants(curve elliptic.Curve, config *Config) (participants []*P
 		T:         config.ParticipantsNumber,
 		Curve:     curve,
 		RandomSrc: reader,
-		PubKeys:   make([]*Point, config.ParticipantsNumber),
-		NTilde:    NTilde,
-		H1:        H1,
-		H2:        H2,
+	}
+	zkProofMeta := &ZKProofMeta{
+		NTilde: NTilde,
+		H1:     H1,
+		H2:     H2,
 	}
 	keySize := 8 * pubMeta.Q().BitLen()
 	paillierPK, paillierSK, err := gaillier.GenerateKeyPair(reader, keySize)

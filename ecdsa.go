@@ -19,7 +19,7 @@ type Point struct{ X, Y *big.Int }
 
 func CreateParticipants(curve elliptic.Curve, config *Config) (participants []*Participant, pubMeta *KeyMeta, paillierSK *gaillier.PrivKey, err error) {
 	if config.ParticipantsNumber < 2 {
-		err = fmt.Errorf("participants should be more than 1, but it is %d", config.ParticipantsNumber)
+		err = fmt.Errorf("participants should be more than 1")
 		return
 	}
 	reader := rand.Reader

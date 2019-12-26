@@ -1,4 +1,4 @@
-module https: //github.com/niclabs/tcecdsa
+module github.com/niclabs/tcecdsa
 
 go 1.13
 

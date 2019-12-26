@@ -15,7 +15,7 @@ type EncryptedL1 struct {
 
 type DecryptedShareL1 struct {
 	Alpha *big.Int
-	Beta *tcpaillier.DecryptionShare
+	Beta  *tcpaillier.DecryptionShare
 }
 
 func (L1 *EncryptedL1) Verify(pk *tcpaillier.PubKey) error {
@@ -31,7 +31,7 @@ func (L1 *DecryptedShareL1) Verify(pk *tcpaillier.PubKey) error {
 	return L1.Beta.Verify(pk)
 }
 
-func (l *L2TCPaillier) AddL1(cList... *EncryptedL1) (sum *EncryptedL1, err error) {
+func (l *L2TCPaillier) AddL1(cList ...*EncryptedL1) (sum *EncryptedL1, err error) {
 	if len(cList) == 0 {
 		err = fmt.Errorf("empty encrypted list")
 		return
@@ -59,7 +59,8 @@ func (l *L2TCPaillier) AddL1(cList... *EncryptedL1) (sum *EncryptedL1, err error
 
 func (l *L2TCPaillier) Mul(c1, c2 *EncryptedL1) (mul *EncryptedL2, err error) {
 	alpha1Alpha2 := new(big.Int).Mul(c1.Alpha, c2.Alpha)
-	encAlpha1Alpha2, encProof, err := l.PubKey.EncryptFixed(alpha1Alpha2.Bytes(), one)
+	alpha1Alpha2.Mod(alpha1Alpha2, l.PubKey.N)
+	encAlpha1Alpha2, encProof, err := l.PubKey.EncryptFixed(alpha1Alpha2, one)
 	if err != nil {
 		return
 	}
@@ -80,7 +81,7 @@ func (l *L2TCPaillier) Mul(c1, c2 *EncryptedL1) (mul *EncryptedL2, err error) {
 		Betas:  make([]*Betas, 0),
 		Proofs: make([]tcpaillier.ZKProof, 0),
 	}
-	mul.Proofs = append(mul.Proofs, encProof, mulProof1, mulProof2)
+	mul.Proofs = append(mul.Proofs, mulProof1, mulProof2, encProof)
 	mul.Betas = append(mul.Betas, &Betas{
 		Beta1: new(big.Int).Set(c1.Beta),
 		Beta2: new(big.Int).Set(c2.Beta),
@@ -109,13 +110,13 @@ func (l *L2TCPaillier) PartialDecryptL1(key *tcpaillier.KeyShare, c *EncryptedL1
 		return
 	}
 	share = &DecryptedShareL1{
-		Alpha:  c.Alpha,
-		Beta:   partialDecryptBeta,
+		Alpha: c.Alpha,
+		Beta:  partialDecryptBeta,
 	}
 	return
 }
 
-func (l *L2TCPaillier) CombineSharesL1(shares ...*DecryptedShareL1) (decrypted []byte, err error) {
+func (l *L2TCPaillier) CombineSharesL1(shares ...*DecryptedShareL1) (decrypted *big.Int, err error) {
 	if len(shares) == 0 {
 		err = fmt.Errorf("empty share list")
 		return
@@ -125,12 +126,10 @@ func (l *L2TCPaillier) CombineSharesL1(shares ...*DecryptedShareL1) (decrypted [
 	for _, share := range shares {
 		betas = append(betas, share.Beta)
 	}
-	decryptBeta, err := l.PubKey.CombineShares(betas...)
+	decrypt, err := l.PubKey.CombineShares(betas...)
 	if err != nil {
 		return
 	}
-	decryptBig := new(big.Int).SetBytes(decryptBeta)
-	decryptBig.Add(decryptBig, shares[0].Alpha)
-	decrypted = decryptBig.Bytes()
+	decrypted.Add(decrypt, shares[0].Alpha)
 	return
 }

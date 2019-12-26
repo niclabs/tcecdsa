@@ -31,9 +31,9 @@ type DecryptedShare struct {
 }
 
 func (L2 *EncryptedL2) Verify(pk *tcpaillier.PubKey) error {
-	for _, proof := range L2.Proofs {
+	for i, proof := range L2.Proofs {
 		if err := proof.Verify(pk); err != nil {
-			return err
+			return fmt.Errorf("Error validating proof %d of type %T: %s",i, proof, err)
 		}
 	}
 	return nil
@@ -42,10 +42,10 @@ func (L2 *EncryptedL2) Verify(pk *tcpaillier.PubKey) error {
 func (L2 *DecryptedShareL2) Verify(pk *tcpaillier.PubKey) error {
 	for _, beta := range L2.Betas {
 		if err := beta.Beta1.Verify(pk); err != nil {
-			return err
+			return fmt.Errorf("Error with Beta1 Verification: %s", err)
 		}
 		if err := beta.Beta2.Verify(pk); err != nil {
-			return err
+			return fmt.Errorf("Error with Beta2 Verification: %s", err)
 		}
 	}
 	return nil
@@ -132,7 +132,7 @@ func (l *L2TCPaillier) PartialDecryptL2(key *tcpaillier.KeyShare, c *EncryptedL2
 	return
 }
 
-func (l *L2TCPaillier) CombineSharesL2(shares ...*DecryptedShareL2) (decrypted []byte, err error) {
+func (l *L2TCPaillier) CombineSharesL2(shares ...*DecryptedShareL2) (decrypted *big.Int, err error) {
 	if len(shares) == 0 {
 		err = fmt.Errorf("empty share list")
 		return
@@ -168,20 +168,18 @@ func (l *L2TCPaillier) CombineSharesL2(shares ...*DecryptedShareL2) (decrypted [
 			return
 		}
 		decryptedBetas = append(decryptedBetas, &Betas{
-			Beta1: new(big.Int).SetBytes(decryptedBeta1),
-			Beta2: new(big.Int).SetBytes(decryptedBeta2),
+			Beta1: decryptedBeta1,
+			Beta2: decryptedBeta2,
 		})
 	}
 
-	decryptAlpha, err := l.PubKey.CombineShares(alphaShares...)
-	decryptBig := new(big.Int).SetBytes(decryptAlpha)
+	decrypted, err = l.PubKey.CombineShares(alphaShares...)
 	if err != nil {
 		return
 	}
 	for _, beta := range decryptedBetas {
 		mulBeta := new(big.Int).Mul(beta.Beta1, beta.Beta2)
-		decryptBig.Add(decryptBig, mulBeta)
+		decrypted.Add(decrypted, mulBeta)
 	}
-	decrypted = decryptBig.Bytes()
 	return
 }

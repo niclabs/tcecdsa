@@ -180,6 +180,7 @@ func (l *L2TCPaillier) CombineSharesL2(shares ...*DecryptedShareL2) (decrypted *
 	for _, beta := range decryptedBetas {
 		mulBeta := new(big.Int).Mul(beta.Beta1, beta.Beta2)
 		decrypted.Add(decrypted, mulBeta)
+		decrypted.Mod(decrypted, l.PubKey.N)
 	}
 	return
 }

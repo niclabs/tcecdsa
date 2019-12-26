@@ -130,6 +130,7 @@ func (l *L2TCPaillier) CombineSharesL1(shares ...*DecryptedShareL1) (decrypted *
 	if err != nil {
 		return
 	}
-	decrypted.Add(decrypt, shares[0].Alpha)
+	decrypted = new(big.Int).Add(decrypt, shares[0].Alpha)
+	decrypted.Mod(decrypted, l.PubKey.N)
 	return
 }

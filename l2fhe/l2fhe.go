@@ -29,11 +29,10 @@ func NewL2TCPaillier(msgBitSize int, l, k uint8, randSource io.Reader) (l1tc *L2
 // Encrypt encrypts a value using TCPaillier and Catalano-Fiore, generating
 // a Level-0 value.
 func (l *L2TCPaillier) Encrypt(m []byte) (e *EncryptedL1, err error) {
-	b := big.NewInt(5)
-	/*b, err := rand.Int(l.PubKey.RandSource, l.MaxMessageModule)
+	b, err := rand.Int(l.PubKey.RandSource, l.MaxMessageModule)
 	if err != nil {
 		return
-	}*/
+	}
 	bigM := new(big.Int).SetBytes(m)
 	encB, proof, err := l.PubKey.Encrypt(b.Bytes())
 	if err != nil {

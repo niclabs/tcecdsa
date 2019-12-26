@@ -6,6 +6,8 @@ import (
 	"math/big"
 )
 
+var one = big.NewInt(1)
+
 type EncryptedL1 struct {
 	Alpha, Beta *big.Int
 	Proofs      []tcpaillier.ZKProof
@@ -57,7 +59,7 @@ func (l *L2TCPaillier) AddL1(cList... *EncryptedL1) (sum *EncryptedL1, err error
 
 func (l *L2TCPaillier) Mul(c1, c2 *EncryptedL1) (mul *EncryptedL2, err error) {
 	alpha1Alpha2 := new(big.Int).Mul(c1.Alpha, c2.Alpha)
-	encAlpha1Alpha2, encProof, err := l.PubKey.Encrypt(alpha1Alpha2.Bytes())
+	encAlpha1Alpha2, encProof, err := l.PubKey.EncryptFixed(alpha1Alpha2.Bytes(), one)
 	if err != nil {
 		return
 	}

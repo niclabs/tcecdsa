@@ -56,13 +56,15 @@ func (l *L2TCPaillier) AddL2(cList ...*EncryptedL2) (sum *EncryptedL2, err error
 		err = fmt.Errorf("empty encrypted list")
 		return
 	}
-	alphaSum := new(big.Int)
+	alphas := make([]*big.Int, 0)
 	betas := make([]*Betas, 0)
-	betas = append(betas, &Betas{})
 	proofs := make([]tcpaillier.ZKProof, 0)
 	for i := 0; i < len(cList); i++ {
 		c := cList[i]
-		alphaSum.Add(alphaSum, c.Alpha)
+		alphas = append(alphas, c.Alpha)
+		if err != nil {
+			return
+		}
 		for _, beta := range c.Betas {
 			betas = append(betas, &Betas{
 				Beta1: new(big.Int).Set(beta.Beta1),
@@ -72,6 +74,10 @@ func (l *L2TCPaillier) AddL2(cList ...*EncryptedL2) (sum *EncryptedL2, err error
 		for _, proof := range c.Proofs {
 			proofs = append(proofs, proof)
 		}
+	}
+	alphaSum, err := l.PubKey.Add(alphas...)
+	if err != nil {
+		return
 	}
 	sum = &EncryptedL2{
 		Alpha:  alphaSum,
@@ -83,14 +89,17 @@ func (l *L2TCPaillier) AddL2(cList ...*EncryptedL2) (sum *EncryptedL2, err error
 }
 
 func (l *L2TCPaillier) MulConstL2(c *EncryptedL2, cons *big.Int) (mul *EncryptedL2, err error) {
-	mulAlpha := new(big.Int).Mul(c.Alpha, cons)
+	mulAlpha, zkp, err := l.PubKey.Multiply(c.Alpha, cons)
+	if err != nil {
+		return
+	}
 	mul = &EncryptedL2{
 		Alpha:  mulAlpha,
 		Betas:  make([]*Betas, 0),
 		Proofs: make([]tcpaillier.ZKProof, 0),
 	}
 	for _, betaPair := range c.Betas {
-		mulBeta1, zkp1, err2 := l.PubKey.Multiply(betaPair.Beta1, cons)
+		mulBeta1, zkpBeta, err2 := l.PubKey.Multiply(betaPair.Beta1, cons)
 		if err2 != nil {
 			err = err2
 			return
@@ -99,7 +108,7 @@ func (l *L2TCPaillier) MulConstL2(c *EncryptedL2, cons *big.Int) (mul *Encrypted
 			Beta1: mulBeta1,
 			Beta2: new(big.Int).Set(betaPair.Beta2),
 		})
-		mul.Proofs = append(mul.Proofs, zkp1)
+		mul.Proofs = append(mul.Proofs, zkp, zkpBeta)
 	}
 	return
 }

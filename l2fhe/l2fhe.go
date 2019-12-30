@@ -7,23 +7,23 @@ import (
 	"math/big"
 )
 
-// L2TCPaillier represents the use of Pallier Threshold Cryptosystem
+// Paillier in l2fhe module represents the use of Pallier Threshold Cryptosystem
 // with Catalano-Fiore's Level-1 Homomorphic Encryption.
 // This implementation is based on TCECDSA paper, using some missing
 // definitions from the original paper.
-type L2TCPaillier struct {
+type Paillier struct {
 	PubKey           *tcpaillier.PubKey
 	MaxMessageModule *big.Int
 }
 
-func NewL2TCPaillier(msgBitSize int, l, k uint8, randSource io.Reader) (l1tc *L2TCPaillier, keyShares []*tcpaillier.KeyShare, err error) {
+func NewKey(msgBitSize int, l, k uint8, randSource io.Reader) (pubKey *Paillier, keyShares []*tcpaillier.KeyShare, err error) {
 	keyShares, pk, err := tcpaillier.NewKey(8*msgBitSize, 1, l, k, randSource) // S is fixed to 1 because this is the version the paper uses.
 	if err != nil {
 		return
 	}
 	maxMessageModule := new(big.Int)
-	maxMessageModule.SetBit(maxMessageModule, msgBitSize,1)
-	l1tc = &L2TCPaillier{
+	maxMessageModule.SetBit(maxMessageModule, msgBitSize, 1)
+	pubKey = &Paillier{
 		PubKey:           pk,
 		MaxMessageModule: maxMessageModule,
 	}
@@ -32,7 +32,7 @@ func NewL2TCPaillier(msgBitSize int, l, k uint8, randSource io.Reader) (l1tc *L2
 
 // Encrypt encrypts a value using TCPaillier and Catalano-Fiore, generating
 // a Level-1 value.
-func (l *L2TCPaillier) Encrypt(m *big.Int) (e *EncryptedL1, err error) {
+func (l *Paillier) Encrypt(m *big.Int) (e *EncryptedL1, err error) {
 	b, err := rand.Int(l.PubKey.RandSource, l.MaxMessageModule)
 	if err != nil {
 		return

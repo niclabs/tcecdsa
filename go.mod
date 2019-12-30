@@ -7,4 +7,4 @@ require (
 	github.com/niclabs/tcpaillier v0.0.2
 )
 
-replace github.com/niclabs/tcpaillier v0.0.2 => /mnt/data/code/go/tcpaillier
+replace github.com/niclabs/tcpaillier v0.0.2 => /home/eriveros/go/src/tcpaillier

@@ -19,7 +19,7 @@ var threeThousandFiveHundred = big.NewInt(3500)
 var fourteenThousand = big.NewInt(14000)
 
 func TestL2TCPaillier_Encrypt(t *testing.T) {
-	l2, keyShares, err := l2fhe.NewL2TCPaillier(bitSize, l, k, rand.Reader)
+	l2, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
 	if err != nil {
 		t.Error(err)
 		return
@@ -64,7 +64,7 @@ func TestL2TCPaillier_Encrypt(t *testing.T) {
 }
 
 func TestL2TCPaillier_AddL1(t *testing.T) {
-	l2, keyShares, err := l2fhe.NewL2TCPaillier(bitSize, l, k, rand.Reader)
+	l2, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
 	if err != nil {
 		t.Error(err)
 		return
@@ -126,7 +126,7 @@ func TestL2TCPaillier_AddL1(t *testing.T) {
 }
 
 func TestL2TCPaillier_MulConstL1(t *testing.T) {
-	l2, keyShares, err := l2fhe.NewL2TCPaillier(bitSize, l, k, rand.Reader)
+	l2, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
 	if err != nil {
 		t.Error(err)
 		return
@@ -182,7 +182,7 @@ func TestL2TCPaillier_MulConstL1(t *testing.T) {
 }
 
 func TestL2TCPaillier_Mul(t *testing.T) {
-	l2, keyShares, err := l2fhe.NewL2TCPaillier(bitSize, l, k, rand.Reader)
+	l2, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
 	if err != nil {
 		t.Error(err)
 		return
@@ -249,7 +249,7 @@ func TestL2TCPaillier_Mul(t *testing.T) {
 }
 
 func TestL2TCPaillier_AddL2(t *testing.T) {
-	l2, keyShares, err := l2fhe.NewL2TCPaillier(bitSize, l, k, rand.Reader)
+	l2, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
 	if err != nil {
 		t.Error(err)
 		return
@@ -328,7 +328,7 @@ func TestL2TCPaillier_AddL2(t *testing.T) {
 }
 
 func TestL2TCPaillier_MulConstL2(t *testing.T) {
-	l2, keyShares, err := l2fhe.NewL2TCPaillier(bitSize, l, k, rand.Reader)
+	l2, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
 	if err != nil {
 		t.Error(err)
 		return

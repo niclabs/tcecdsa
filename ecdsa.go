@@ -3,21 +3,22 @@ package tcecdsa
 import (
 	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/rsa"
 	"fmt"
 	"github.com/actuallyachraf/gomorph/gaillier"
+	"github.com/niclabs/tcecdsa/l2fhe"
 	"io"
 	"math/big"
 )
 
 type Config struct {
 	ParticipantsNumber uint8
+	Threshold          uint8
 	Reader             io.Reader
 }
 
 type Point struct{ X, Y *big.Int }
 
-func CreateParticipants(curve elliptic.Curve, config *Config) (participants []*Participant, pubMeta *KeyMeta, paillierSK *gaillier.PrivKey, err error) {
+func NewParams(curve elliptic.Curve, config *Config) (participants []*Participant, params *Params, err error) {
 	if config.ParticipantsNumber < 2 {
 		err = fmt.Errorf("participants should be more than 1")
 		return
@@ -26,71 +27,32 @@ func CreateParticipants(curve elliptic.Curve, config *Config) (participants []*P
 	if config.Reader == nil {
 		reader = config.Reader
 	}
-	NTildeGen, err := rsa.GenerateKey(rand.Reader, 2048)
+	// New Pallier threshold Key
+	nLength := 8 * curve.Params().BitSize
+	pk, shares, err := l2fhe.NewKey(nLength, config.ParticipantsNumber, config.Threshold, reader)
 	if err != nil {
 		return
 	}
-	NTilde := new(big.Int).Mul(NTildeGen.Primes[0], NTildeGen.Primes[1])
-	H1, err := rand.Int(rand.Reader, NTilde)
-	if err != nil {
-		return
+	params = &Params{
+		L:          config.ParticipantsNumber,
+		K:          0,
+		PaillierPK: pk,
+		Curve:      curve,
+		RandomSrc:  reader,
 	}
-	H2, err := rand.Int(rand.Reader, NTilde)
-	if err != nil {
-		return
-	}
-	pubMeta = &KeyMeta{
-		T:         config.ParticipantsNumber,
-		Curve:     curve,
-		RandomSrc: reader,
-	}
-	zkProofMeta := &ZKProofMeta{
-		NTilde: NTilde,
-		H1:     H1,
-		H2:     H2,
-	}
-	keySize := 8 * pubMeta.Q().BitLen()
-	paillierPK, paillierSK, err := gaillier.GenerateKeyPair(reader, keySize)
-	if err != nil {
-		return
-	}
-	pubMeta.PaillierPK = paillierPK
-	participants = make([]*Participant, config.ParticipantsNumber)
-	for i := uint8(0); i < config.ParticipantsNumber; i++ {
-		participant, err := newParticipant(i, pubMeta)
-		if err != nil {
-			return
-		}
-		participants[i] = participant
-		pubMeta.PubKeys[i] = participant.Y
-	}
-	// Create alpha and Y
-	var alpha []byte
-	y := new(Point)
-	for i, p := range participants {
-		if i == 0 {
-			alpha, err = p.AlphaI()
-			if err != nil {
-				return
-			}
-			y = p.Y
-		} else {
-			alpha2, err := p.AlphaI()
-			if err != nil {
-				return
-			}
-			alpha = gaillier.Add(paillierPK, alpha, alpha2)
-			yx, yy := curve.Add(p.Y.X, p.Y.Y, y.X, y.Y)
-			y.X, y.Y = yx, yy
+	participants = make([]*Participant, len(shares))
+	for i, share := range shares {
+		participants[i] = &Participant{
+			Index:         uint8(i),
+			PaillierShare: share,
+			params:        params,
 		}
 	}
-	pubMeta.Alpha = alpha
-	pubMeta.Y = y
 	return
 }
 
 // Round 2, now centralized
-func (params *KeyMeta) GetUV(uList, vList [][]byte, zkList []ZKProof) (u, v []byte, err error) {
+func (params *Params) GetUV(uList, vList [][]byte, zkList []ZKProof) (u, v []byte, err error) {
 	for _, zkp := range zkList {
 		if err = zkp.Verify(); err != nil {
 			return
@@ -114,7 +76,7 @@ func (params *KeyMeta) GetUV(uList, vList [][]byte, zkList []ZKProof) (u, v []by
 }
 
 // Round 4, 5 and 6 now centralized
-func (params *KeyMeta) JoinSigShares(rList []*Point, wList [][]byte, zkList []ZKProof, u, v []byte, paillierSK *gaillier.PrivKey) (sign []byte, err error) {
+func (params *Params) JoinSigShares(rList []*Point, wList [][]byte, zkList []ZKProof, u, v []byte, paillierSK *gaillier.PrivKey) (sign []byte, err error) {
 	// Round 4, but centralized
 	for _, zkp := range zkList {
 		if err = zkp.Verify(); err != nil {

@@ -51,7 +51,7 @@ func (L2 *DecryptedShareL2) Verify(pk *tcpaillier.PubKey) error {
 	return nil
 }
 
-func (l *L2TCPaillier) AddL2(cList ...*EncryptedL2) (sum *EncryptedL2, err error) {
+func (l *Paillier) AddL2(cList ...*EncryptedL2) (sum *EncryptedL2, err error) {
 	if len(cList) == 0 {
 		err = fmt.Errorf("empty encrypted list")
 		return
@@ -88,7 +88,7 @@ func (l *L2TCPaillier) AddL2(cList ...*EncryptedL2) (sum *EncryptedL2, err error
 
 }
 
-func (l *L2TCPaillier) MulConstL2(c *EncryptedL2, cons *big.Int) (mul *EncryptedL2, err error) {
+func (l *Paillier) MulConstL2(c *EncryptedL2, cons *big.Int) (mul *EncryptedL2, err error) {
 	mulAlpha, zkp, err := l.PubKey.Multiply(c.Alpha, cons)
 	if err != nil {
 		return
@@ -113,7 +113,7 @@ func (l *L2TCPaillier) MulConstL2(c *EncryptedL2, cons *big.Int) (mul *Encrypted
 	return
 }
 
-func (l *L2TCPaillier) PartialDecryptL2(key *tcpaillier.KeyShare, c *EncryptedL2) (share *DecryptedShareL2, err error) {
+func (l *Paillier) PartialDecryptL2(key *tcpaillier.KeyShare, c *EncryptedL2) (share *DecryptedShareL2, err error) {
 	decAlpha, err := key.DecryptProof(c.Alpha)
 	if err != nil {
 		return
@@ -141,7 +141,7 @@ func (l *L2TCPaillier) PartialDecryptL2(key *tcpaillier.KeyShare, c *EncryptedL2
 	return
 }
 
-func (l *L2TCPaillier) CombineSharesL2(shares ...*DecryptedShareL2) (decrypted *big.Int, err error) {
+func (l *Paillier) CombineSharesL2(shares ...*DecryptedShareL2) (decrypted *big.Int, err error) {
 	if len(shares) == 0 {
 		err = fmt.Errorf("empty share list")
 		return

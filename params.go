@@ -13,12 +13,7 @@ type Params struct {
 	Curve      elliptic.Curve // Elliptic Curve used
 	RandomSrc  io.Reader      // Random Source
 	PaillierPK *l2fhe.Paillier
-}
-
-type ZKProofMeta struct {
-	NTilde *big.Int // Used in ZK Proofs
-	H1     *big.Int // Used in ZK Proofs
-	H2     *big.Int // Used in ZK Proofs
+	*ZKProofMeta
 }
 
 // Returns Curve Subfield bitlength

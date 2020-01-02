@@ -18,6 +18,15 @@ type DecryptedShareL1 struct {
 	Beta  *tcpaillier.DecryptionShare
 }
 
+func (L1 *EncryptedL1) Clone() *EncryptedL1 {
+	return &EncryptedL1{
+		Alpha:  new(big.Int).Set(L1.Alpha),
+		Beta:   new(big.Int).Set(L1.Beta),
+		Proofs: L1.Proofs,
+	}
+
+}
+
 func (L1 *EncryptedL1) Verify(pk *tcpaillier.PubKey) error {
 	for _, proof := range L1.Proofs {
 		if err := proof.Verify(pk); err != nil {

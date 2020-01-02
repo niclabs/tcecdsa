@@ -30,10 +30,26 @@ type DecryptedShare struct {
 	Proofs []tcpaillier.ZKProof
 }
 
+func (L2 *EncryptedL2) Clone() *EncryptedL2 {
+	betas := make([]*Betas, 0)
+	for _, beta := range L2.Betas {
+		betas = append(betas, &Betas{
+			Beta1: new(big.Int).Set(beta.Beta1),
+			Beta2: new(big.Int).Set(beta.Beta2),
+		})
+	}
+	return &EncryptedL2{
+		Alpha:  new(big.Int).Set(L2.Alpha),
+		Betas:  betas,
+		Proofs: L2.Proofs,
+	}
+
+}
+
 func (L2 *EncryptedL2) Verify(pk *tcpaillier.PubKey) error {
 	for i, proof := range L2.Proofs {
 		if err := proof.Verify(pk); err != nil {
-			return fmt.Errorf("Error validating proof %d of type %T: %s",i, proof, err)
+			return fmt.Errorf("Error validating proof %d of type %T: %s", i, proof, err)
 		}
 	}
 	return nil

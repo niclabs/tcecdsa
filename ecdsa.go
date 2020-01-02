@@ -16,8 +16,6 @@ type Config struct {
 	Reader             io.Reader
 }
 
-type Point struct{ X, Y *big.Int }
-
 func NewParams(curve elliptic.Curve, config *Config) (participants []*Participant, params *Params, err error) {
 	if config.ParticipantsNumber < 2 {
 		err = fmt.Errorf("participants should be more than 1")
@@ -33,12 +31,17 @@ func NewParams(curve elliptic.Curve, config *Config) (participants []*Participan
 	if err != nil {
 		return
 	}
+	zkProofMeta, err := GenZKProofMeta(reader)
+	if err != nil {
+		return
+	}
 	params = &Params{
-		L:          config.ParticipantsNumber,
-		K:          0,
-		PaillierPK: pk,
-		Curve:      curve,
-		RandomSrc:  reader,
+		L:           config.ParticipantsNumber,
+		K:           0,
+		PaillierPK:  pk,
+		Curve:       curve,
+		RandomSrc:   reader,
+		ZKProofMeta: zkProofMeta,
 	}
 	participants = make([]*Participant, len(shares))
 	for i, share := range shares {

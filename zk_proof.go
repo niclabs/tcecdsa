@@ -2,19 +2,45 @@ package tcecdsa
 
 import (
 	"crypto/rand"
+	"crypto/rsa"
+	"github.com/niclabs/tcecdsa/l2fhe"
+	"io"
 	"math/big"
 )
 
-type ZKProof interface {
-	Verify() error
+type ZKEncryptX struct {
+	
 }
 
-type RandValues struct {
-	alpha, delta  *big.Int
-	rho1, rho2    *big.Int
-	beta1, beta2  *big.Int
-	gamma, nu     *big.Int
-	rho3, epsilon *big.Int
+func (zkp *ZKEncryptX) Verify(g, y *Point, enc *l2fhe.EncryptedL1) error {
+	return nil
+}
+
+type ZKProofMeta struct {
+	NTilde *big.Int // Used in ZK Proofs
+	H1     *big.Int // Used in ZK Proofs
+	H2     *big.Int // Used in ZK Proofs
+}
+
+func GenZKProofMeta(reader io.Reader) (*ZKProofMeta, error) {
+	sk, err := rsa.GenerateKey(reader, 2048)
+	if err != nil {
+		return nil, err
+	}
+	nTilde := sk.N
+	h1, err := rand.Int(reader, nTilde)
+	if err != nil {
+		return nil, err
+	}
+	h2, err := rand.Int(reader, nTilde)
+	if err != nil {
+		return nil, err
+	}
+	return &ZKProofMeta{
+		NTilde: nTilde,
+		H1:     h1,
+		H2:     h2,
+	}, nil
 }
 
 // Pi as seen on paper

@@ -7,9 +7,8 @@ import (
 )
 
 type EncryptedL2 struct {
-	Alpha  *big.Int
-	Betas  []*Betas
-	Proofs []tcpaillier.ZKProof
+	Alpha *big.Int
+	Betas []*Betas
 }
 
 type DecryptedShareL2 struct {
@@ -39,32 +38,10 @@ func (L2 *EncryptedL2) Clone() *EncryptedL2 {
 		})
 	}
 	return &EncryptedL2{
-		Alpha:  new(big.Int).Set(L2.Alpha),
-		Betas:  betas,
-		Proofs: L2.Proofs,
+		Alpha: new(big.Int).Set(L2.Alpha),
+		Betas: betas,
 	}
 
-}
-
-func (L2 *EncryptedL2) Verify(pk *tcpaillier.PubKey) error {
-	for i, proof := range L2.Proofs {
-		if err := proof.Verify(pk); err != nil {
-			return fmt.Errorf("Error validating proof %d of type %T: %s", i, proof, err)
-		}
-	}
-	return nil
-}
-
-func (L2 *DecryptedShareL2) Verify(pk *tcpaillier.PubKey) error {
-	for _, beta := range L2.Betas {
-		if err := beta.Beta1.Verify(pk); err != nil {
-			return fmt.Errorf("Error with Beta1 Verification: %s", err)
-		}
-		if err := beta.Beta2.Verify(pk); err != nil {
-			return fmt.Errorf("Error with Beta2 Verification: %s", err)
-		}
-	}
-	return nil
 }
 
 func (l *Paillier) AddL2(cList ...*EncryptedL2) (sum *EncryptedL2, err error) {
@@ -74,7 +51,6 @@ func (l *Paillier) AddL2(cList ...*EncryptedL2) (sum *EncryptedL2, err error) {
 	}
 	alphas := make([]*big.Int, 0)
 	betas := make([]*Betas, 0)
-	proofs := make([]tcpaillier.ZKProof, 0)
 	for i := 0; i < len(cList); i++ {
 		c := cList[i]
 		alphas = append(alphas, c.Alpha)
@@ -87,35 +63,34 @@ func (l *Paillier) AddL2(cList ...*EncryptedL2) (sum *EncryptedL2, err error) {
 				Beta2: new(big.Int).Set(beta.Beta2),
 			})
 		}
-		for _, proof := range c.Proofs {
-			proofs = append(proofs, proof)
-		}
 	}
-	alphaSum, err := l.PubKey.Add(alphas...)
+	alphaSum, err := l.PK.Add(alphas...)
 	if err != nil {
 		return
 	}
 	sum = &EncryptedL2{
-		Alpha:  alphaSum,
-		Betas:  betas,
-		Proofs: proofs,
+		Alpha: alphaSum,
+		Betas: betas,
 	}
 	return
 
 }
 
-func (l *Paillier) MulConstL2(c *EncryptedL2, cons *big.Int) (mul *EncryptedL2, err error) {
-	mulAlpha, zkp, err := l.PubKey.Multiply(c.Alpha, cons)
+func (l *Paillier) MulConstL2(c *EncryptedL2, cons *big.Int) (mul *EncryptedL2, zk ZKProof, err error) {
+	mulAlpha, alphaZK, err := l.PK.Multiply(c.Alpha, cons)
 	if err != nil {
 		return
 	}
 	mul = &EncryptedL2{
-		Alpha:  mulAlpha,
-		Betas:  make([]*Betas, 0),
-		Proofs: make([]tcpaillier.ZKProof, 0),
+		Alpha: mulAlpha,
+		Betas: make([]*Betas, 0),
+	}
+	zkp := &EncryptedL2ZK{
+		alpha: alphaZK,
+		betas: make([]tcpaillier.ZKProof, 0),
 	}
 	for _, betaPair := range c.Betas {
-		mulBeta1, zkpBeta, err2 := l.PubKey.Multiply(betaPair.Beta1, cons)
+		mulBeta1, zkpBeta, err2 := l.PK.Multiply(betaPair.Beta1, cons)
 		if err2 != nil {
 			err = err2
 			return
@@ -124,27 +99,32 @@ func (l *Paillier) MulConstL2(c *EncryptedL2, cons *big.Int) (mul *EncryptedL2, 
 			Beta1: mulBeta1,
 			Beta2: new(big.Int).Set(betaPair.Beta2),
 		})
-		mul.Proofs = append(mul.Proofs, zkp, zkpBeta)
+		zkp.betas = append(zkp.betas, zkpBeta)
 	}
+	zk = zkp
 	return
 }
 
-func (l *Paillier) PartialDecryptL2(key *tcpaillier.KeyShare, c *EncryptedL2) (share *DecryptedShareL2, err error) {
-	decAlpha, err := key.DecryptProof(c.Alpha)
+func (l *Paillier) PartialDecryptL2(key *tcpaillier.KeyShare, c *EncryptedL2) (share *DecryptedShareL2, zk ZKProof, err error) {
+	decAlpha, zkpAlpha, err := key.Decrypt(c.Alpha)
 	if err != nil {
 		return
+	}
+	zkp := &DecryptedShareL2ZK{
+		alpha: zkpAlpha,
+		betas: make([]*betasZK, 0),
 	}
 	share = &DecryptedShareL2{
 		Alpha: decAlpha,
 		Betas: make([]*DecryptedShareBetas, 0),
 	}
 	for _, beta := range c.Betas {
-		dsBeta1, err2 := key.DecryptProof(beta.Beta1)
+		dsBeta1, zkpBeta1, err2 := key.Decrypt(beta.Beta1)
 		if err2 != nil {
 			err = err2
 			return
 		}
-		dsBeta2, err2 := key.DecryptProof(beta.Beta2)
+		dsBeta2, zkpBeta2, err2 := key.Decrypt(beta.Beta2)
 		if err2 != nil {
 			err = err2
 			return
@@ -153,7 +133,13 @@ func (l *Paillier) PartialDecryptL2(key *tcpaillier.KeyShare, c *EncryptedL2) (s
 			Beta1: dsBeta1,
 			Beta2: dsBeta2,
 		})
+		zkp.betas = append(zkp.betas, &betasZK{
+			beta1: zkpBeta1,
+			beta2: zkpBeta2,
+		})
+
 	}
+	zk = zkp
 	return
 }
 
@@ -182,12 +168,12 @@ func (l *Paillier) CombineSharesL2(shares ...*DecryptedShareL2) (decrypted *big.
 			beta1Shares = append(beta1Shares, shares[j].Betas[i].Beta1)
 			beta2Shares = append(beta2Shares, shares[j].Betas[i].Beta2)
 		}
-		decryptedBeta1, err2 := l.PubKey.CombineShares(beta1Shares...)
+		decryptedBeta1, err2 := l.PK.CombineShares(beta1Shares...)
 		if err2 != nil {
 			err = err2
 			return
 		}
-		decryptedBeta2, err2 := l.PubKey.CombineShares(beta2Shares...)
+		decryptedBeta2, err2 := l.PK.CombineShares(beta2Shares...)
 		if err2 != nil {
 			err = err2
 			return
@@ -198,14 +184,14 @@ func (l *Paillier) CombineSharesL2(shares ...*DecryptedShareL2) (decrypted *big.
 		})
 	}
 
-	decrypted, err = l.PubKey.CombineShares(alphaShares...)
+	decrypted, err = l.PK.CombineShares(alphaShares...)
 	if err != nil {
 		return
 	}
 	for _, beta := range decryptedBetas {
 		mulBeta := new(big.Int).Mul(beta.Beta1, beta.Beta2)
 		decrypted.Add(decrypted, mulBeta)
-		decrypted.Mod(decrypted, l.PubKey.N)
+		decrypted.Mod(decrypted, l.PK.N)
 	}
 	return
 }

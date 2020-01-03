@@ -19,39 +19,37 @@ var threeThousandFiveHundred = big.NewInt(3500)
 var fourteenThousand = big.NewInt(14000)
 
 func TestL2TCPaillier_Encrypt(t *testing.T) {
-	l2, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	pk := l2.PubKey
-
-	encFifty, err := l2.Encrypt(fifty)
+	encFifty, zkp, err := pk.Encrypt(fifty)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	if encFifty.Verify(pk) != nil {
+	if err := zkp.Verify(pk, encFifty); err != nil {
 		t.Error(err)
 		return
 	}
 
 	decShares := make([]*l2fhe.DecryptedShareL1, 0)
 	for _, share := range keyShares {
-		ds, err := l2.PartialDecryptL1(share, encFifty)
+		ds, zkp, err := pk.PartialDecryptL1(share, encFifty)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		if ds.Verify(pk) != nil {
+		if zkp.Verify(pk, encFifty, ds) != nil {
 			t.Error(err)
 			return
 		}
 		decShares = append(decShares, ds)
 	}
 
-	decrypted, err := l2.CombineSharesL1(decShares...)
+	decrypted, err := pk.CombineSharesL1(decShares...)
 	if err != nil {
 		t.Error(err)
 		return
@@ -64,37 +62,35 @@ func TestL2TCPaillier_Encrypt(t *testing.T) {
 }
 
 func TestL2TCPaillier_AddL1(t *testing.T) {
-	l2, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	pk := l2.PubKey
-
-	encFifty, err := l2.Encrypt(fifty)
+	encFifty, zkp, err := pk.Encrypt(fifty)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if encFifty.Verify(pk) != nil {
+	if err := zkp.Verify(pk, encFifty); err != nil {
 		t.Error(err)
 		return
 	}
 
-	eencSeventy, err := l2.Encrypt(seventy)
+	encSeventy, zkp, err := pk.Encrypt(seventy)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := eencSeventy.Verify(pk); err != nil {
+	if err := zkp.Verify(pk, encSeventy); err != nil {
 		t.Error(err)
 		return
 	}
 
-	encTwelve, err := l2.AddL1(encFifty, eencSeventy)
+	encTwelve, err := pk.AddL1(encFifty, encSeventy)
 	if err != nil {
 		t.Error(err)
 		return
@@ -102,19 +98,19 @@ func TestL2TCPaillier_AddL1(t *testing.T) {
 
 	decShares := make([]*l2fhe.DecryptedShareL1, 0)
 	for _, share := range keyShares {
-		ds, err := l2.PartialDecryptL1(share, encTwelve)
+		ds, zkp, err := pk.PartialDecryptL1(share, encTwelve)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		if ds.Verify(pk) != nil {
+		if err := zkp.Verify(pk, encTwelve, ds); err != nil {
 			t.Error(err)
 			return
 		}
 		decShares = append(decShares, ds)
 	}
 
-	decrypted, err := l2.CombineSharesL1(decShares...)
+	decrypted, err := pk.CombineSharesL1(decShares...)
 	if err != nil {
 		t.Error(err)
 		return
@@ -126,51 +122,49 @@ func TestL2TCPaillier_AddL1(t *testing.T) {
 }
 
 func TestL2TCPaillier_MulConstL1(t *testing.T) {
-	l2, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	pk := l2.PubKey
-
-	encFifty, err := l2.Encrypt(fifty)
+	encFifty, zkp, err := pk.Encrypt(fifty)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := encFifty.Verify(pk); err != nil {
+	if err := zkp.Verify(pk, encFifty); err != nil {
 		t.Error(err)
 		return
 	}
 
-	encThreeThousandFiveHundred, err := l2.MulConstL1(encFifty, seventy)
+	encThreeThousandFiveHundred, zkp, err := pk.MulConstL1(encFifty, seventy)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := encThreeThousandFiveHundred.Verify(pk); err != nil {
+	if err := zkp.Verify(pk, encThreeThousandFiveHundred); err != nil {
 		t.Error(err)
 		return
 	}
 
 	decShares := make([]*l2fhe.DecryptedShareL1, 0)
 	for _, share := range keyShares {
-		ds, err := l2.PartialDecryptL1(share, encThreeThousandFiveHundred)
+		ds, zkp, err := pk.PartialDecryptL1(share, encThreeThousandFiveHundred)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		if ds.Verify(pk) != nil {
+		if err := zkp.Verify(pk, encThreeThousandFiveHundred, ds); err != nil {
 			t.Error(err)
 			return
 		}
 		decShares = append(decShares, ds)
 	}
 
-	decrypted, err := l2.CombineSharesL1(decShares...)
+	decrypted, err := pk.CombineSharesL1(decShares...)
 	if err != nil {
 		t.Error(err)
 		return
@@ -182,115 +176,111 @@ func TestL2TCPaillier_MulConstL1(t *testing.T) {
 }
 
 func TestL2TCPaillier_Mul(t *testing.T) {
-	l2, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	pk := l2.PubKey
-
-	encFifty, err := l2.Encrypt(fifty)
+	encFifty, zkp, err := pk.Encrypt(fifty)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := encFifty.Verify(pk); err != nil {
+	if err := zkp.Verify(pk, encFifty); err != nil {
 		t.Error(err)
 		return
 	}
 
-	eencSeventy, err := l2.Encrypt(seventy)
+	encSeventy, zkp, err := pk.Encrypt(seventy)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := eencSeventy.Verify(pk); err != nil {
+	if err := zkp.Verify(pk, encSeventy); err != nil {
 		t.Error(err)
 		return
 	}
 
-	encThreeThousandFiveHundred, err := l2.Mul(encFifty, eencSeventy)
+	encThreeThousandFiveHundred, zkp, err := pk.Mul(encFifty, encSeventy)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := encThreeThousandFiveHundred.Verify(pk); err != nil {
+	if err := zkp.Verify(pk, encThreeThousandFiveHundred); err != nil {
 		t.Error(err)
 		return
 	}
 
 	decShares := make([]*l2fhe.DecryptedShareL2, 0)
 	for _, share := range keyShares {
-		ds, err := l2.PartialDecryptL2(share, encThreeThousandFiveHundred)
+		ds, zkp, err := pk.PartialDecryptL2(share, encThreeThousandFiveHundred)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		if ds.Verify(pk) != nil {
+		if err := zkp.Verify(pk, encThreeThousandFiveHundred, ds); err != nil {
 			t.Error(err)
 			return
 		}
 		decShares = append(decShares, ds)
 	}
 
-	decrypted, err := l2.CombineSharesL2(decShares...)
+	decrypted, err := pk.CombineSharesL2(decShares...)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	if decrypted.Cmp(threeThousandFiveHundred) != 0 {
-		t.Errorf("Error Decrypting:\nDecrypted = %s\n Expected = %s\n   Module = %s", decrypted, threeThousandFiveHundred, pk.N)
+		t.Errorf("Error Decrypting:\nDecrypted = %s\n Expected = %s\n   Module = %s", decrypted, threeThousandFiveHundred, pk.PK.N)
 		return
 	}
 }
 
 func TestL2TCPaillier_AddL2(t *testing.T) {
-	l2, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	pk := l2.PubKey
-
-	encFifty, err := l2.Encrypt(fifty)
+	encFifty, zkp, err := pk.Encrypt(fifty)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := encFifty.Verify(pk); err != nil {
+	if err := zkp.Verify(pk, encFifty); err != nil {
 		t.Error(err)
 		return
 	}
 
-	encSenventy, err := l2.Encrypt(seventy)
+	encSeventy, zkp, err := pk.Encrypt(seventy)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := encSenventy.Verify(pk); err != nil {
+	if err := zkp.Verify(pk, encSeventy); err != nil {
 		t.Error(err)
 		return
 	}
 
-	encThreeThousandFiveHundred, err := l2.Mul(encFifty, encSenventy)
+	encThreeThousandFiveHundred, zkp, err := pk.Mul(encFifty, encSeventy)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := encThreeThousandFiveHundred.Verify(pk); err != nil {
+	if err := zkp.Verify(pk, encThreeThousandFiveHundred); err != nil {
 		t.Error(err)
 		return
 	}
 
-	encFourteenThousand, err := l2.AddL2(
+	encFourteenThousand, err := pk.AddL2(
 		encThreeThousandFiveHundred,
 		encThreeThousandFiveHundred,
 		encThreeThousandFiveHundred,
@@ -304,103 +294,101 @@ func TestL2TCPaillier_AddL2(t *testing.T) {
 
 	decShares := make([]*l2fhe.DecryptedShareL2, 0)
 	for _, share := range keyShares {
-		ds, err := l2.PartialDecryptL2(share, encFourteenThousand)
+		ds, zkp, err := pk.PartialDecryptL2(share, encFourteenThousand)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		if ds.Verify(pk) != nil {
+		if err := zkp.Verify(pk, encFourteenThousand, ds); err != nil {
 			t.Error(err)
 			return
 		}
 		decShares = append(decShares, ds)
 	}
 
-	decrypted, err := l2.CombineSharesL2(decShares...)
+	decrypted, err := pk.CombineSharesL2(decShares...)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	if decrypted.Cmp(fourteenThousand) != 0 {
-		t.Errorf("Error Decrypting:\nDecrypted = %s\n Expected = %s\n   Module = %s", decrypted, threeThousandFiveHundred, pk.N)
+		t.Errorf("Error Decrypting:\nDecrypted = %s\n Expected = %s\n   Module = %s", decrypted, threeThousandFiveHundred, pk.PK.N)
 		return
 	}
 }
 
 func TestL2TCPaillier_MulConstL2(t *testing.T) {
-	l2, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	pk := l2.PubKey
-
-	encFifty, err := l2.Encrypt(fifty)
+	encFifty, zkp, err := pk.Encrypt(fifty)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := encFifty.Verify(pk); err != nil {
+	if err := zkp.Verify(pk, encFifty); err != nil {
 		t.Error(err)
 		return
 	}
 
-	encSenventy, err := l2.Encrypt(seventy)
+	encSeventy, zkp, err := pk.Encrypt(seventy)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := encSenventy.Verify(pk); err != nil {
+	if err := zkp.Verify(pk, encSeventy); err != nil {
 		t.Error(err)
 		return
 	}
 
-	encThreeThousandFiveHundred, err := l2.Mul(encFifty, encSenventy)
+	encThreeThousandFiveHundred, zkp, err := pk.Mul(encFifty, encSeventy)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := encThreeThousandFiveHundred.Verify(pk); err != nil {
+	if err := zkp.Verify(pk, encThreeThousandFiveHundred); err != nil {
 		t.Error(err)
 		return
 	}
 
-	encFourteenThousand, err := l2.MulConstL2(encThreeThousandFiveHundred, four)
+	encFourteenThousand, zkp, err := pk.MulConstL2(encThreeThousandFiveHundred, four)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-		if err := encFourteenThousand.Verify(pk); err != nil {
-			t.Error(err)
-			return
-		}
+	if err := zkp.Verify(pk, encFourteenThousand); err != nil {
+		t.Error(err)
+		return
+	}
 
 	decShares := make([]*l2fhe.DecryptedShareL2, 0)
 	for _, share := range keyShares {
-		ds, err := l2.PartialDecryptL2(share, encFourteenThousand)
+		ds, zkp, err := pk.PartialDecryptL2(share, encFourteenThousand)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		if ds.Verify(pk) != nil {
+		if err := zkp.Verify(pk, encFourteenThousand, ds); err != nil {
 			t.Error(err)
 			return
 		}
 		decShares = append(decShares, ds)
 	}
 
-	decrypted, err := l2.CombineSharesL2(decShares...)
+	decrypted, err := pk.CombineSharesL2(decShares...)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	if decrypted.Cmp(fourteenThousand) != 0 {
-		t.Errorf("Error Decrypting:\nDecrypted = %s\n Expected = %s\n   Module = %s", decrypted, threeThousandFiveHundred, pk.N)
+		t.Errorf("Error Decrypting:\nDecrypted = %s\n Expected = %s\n   Module = %s", decrypted, threeThousandFiveHundred, pk.PK.N)
 		return
 	}
 }

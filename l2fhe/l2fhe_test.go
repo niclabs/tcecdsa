@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-const bitSize = 128
+const bitSize = 64
 const l = 5
 const k = 3
 
@@ -25,12 +25,8 @@ func TestL2TCPaillier_Encrypt(t *testing.T) {
 		return
 	}
 
-	encFifty, zkp, err := pk.Encrypt(fifty)
+	encFifty, _, err := pk.Encrypt(fifty)
 	if err != nil {
-		t.Error(err)
-		return
-	}
-	if err := zkp.Verify(pk, encFifty); err != nil {
 		t.Error(err)
 		return
 	}
@@ -68,24 +64,15 @@ func TestL2TCPaillier_AddL1(t *testing.T) {
 		return
 	}
 
-	encFifty, zkp, err := pk.Encrypt(fifty)
+	encFifty, _, err := pk.Encrypt(fifty)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := zkp.Verify(pk, encFifty); err != nil {
-		t.Error(err)
-		return
-	}
 
-	encSeventy, zkp, err := pk.Encrypt(seventy)
+	encSeventy, _, err := pk.Encrypt(seventy)
 	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	if err := zkp.Verify(pk, encSeventy); err != nil {
 		t.Error(err)
 		return
 	}
@@ -128,24 +115,15 @@ func TestL2TCPaillier_MulConstL1(t *testing.T) {
 		return
 	}
 
-	encFifty, zkp, err := pk.Encrypt(fifty)
+	encFifty, _, err := pk.Encrypt(fifty)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := zkp.Verify(pk, encFifty); err != nil {
-		t.Error(err)
-		return
-	}
 
-	encThreeThousandFiveHundred, zkp, err := pk.MulConstL1(encFifty, seventy)
+	encThreeThousandFiveHundred, err := pk.MulConstL1(encFifty, seventy)
 	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	if err := zkp.Verify(pk, encThreeThousandFiveHundred); err != nil {
 		t.Error(err)
 		return
 	}
@@ -182,35 +160,21 @@ func TestL2TCPaillier_Mul(t *testing.T) {
 		return
 	}
 
-	encFifty, zkp, err := pk.Encrypt(fifty)
+	encFifty, _, err := pk.Encrypt(fifty)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := zkp.Verify(pk, encFifty); err != nil {
-		t.Error(err)
-		return
-	}
-
-	encSeventy, zkp, err := pk.Encrypt(seventy)
+	encSeventy, _, err := pk.Encrypt(seventy)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := zkp.Verify(pk, encSeventy); err != nil {
-		t.Error(err)
-		return
-	}
 
-	encThreeThousandFiveHundred, zkp, err := pk.Mul(encFifty, encSeventy)
+	encThreeThousandFiveHundred, err := pk.Mul(encFifty, encSeventy)
 	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	if err := zkp.Verify(pk, encThreeThousandFiveHundred); err != nil {
 		t.Error(err)
 		return
 	}
@@ -235,7 +199,7 @@ func TestL2TCPaillier_Mul(t *testing.T) {
 		return
 	}
 	if decrypted.Cmp(threeThousandFiveHundred) != 0 {
-		t.Errorf("Error Decrypting:\nDecrypted = %s\n Expected = %s\n   Module = %s", decrypted, threeThousandFiveHundred, pk.PK.N)
+		t.Errorf("Error Decrypting:\nDecrypted = %s\n Expected = %s\n   Module = %s", decrypted, threeThousandFiveHundred, pk.Paillier.N)
 		return
 	}
 }
@@ -247,35 +211,22 @@ func TestL2TCPaillier_AddL2(t *testing.T) {
 		return
 	}
 
-	encFifty, zkp, err := pk.Encrypt(fifty)
+	encFifty, _, err := pk.Encrypt(fifty)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := zkp.Verify(pk, encFifty); err != nil {
-		t.Error(err)
-		return
-	}
 
-	encSeventy, zkp, err := pk.Encrypt(seventy)
+	encSeventy, _, err := pk.Encrypt(seventy)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := zkp.Verify(pk, encSeventy); err != nil {
-		t.Error(err)
-		return
-	}
 
-	encThreeThousandFiveHundred, zkp, err := pk.Mul(encFifty, encSeventy)
+	encThreeThousandFiveHundred, err := pk.Mul(encFifty, encSeventy)
 	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	if err := zkp.Verify(pk, encThreeThousandFiveHundred); err != nil {
 		t.Error(err)
 		return
 	}
@@ -312,7 +263,7 @@ func TestL2TCPaillier_AddL2(t *testing.T) {
 		return
 	}
 	if decrypted.Cmp(fourteenThousand) != 0 {
-		t.Errorf("Error Decrypting:\nDecrypted = %s\n Expected = %s\n   Module = %s", decrypted, threeThousandFiveHundred, pk.PK.N)
+		t.Errorf("Error Decrypting:\nDecrypted = %s\n Expected = %s\n   Module = %s", decrypted, threeThousandFiveHundred, pk.Paillier.N)
 		return
 	}
 }
@@ -324,46 +275,28 @@ func TestL2TCPaillier_MulConstL2(t *testing.T) {
 		return
 	}
 
-	encFifty, zkp, err := pk.Encrypt(fifty)
+	encFifty, _, err := pk.Encrypt(fifty)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := zkp.Verify(pk, encFifty); err != nil {
-		t.Error(err)
-		return
-	}
 
-	encSeventy, zkp, err := pk.Encrypt(seventy)
+	encSeventy, _, err := pk.Encrypt(seventy)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := zkp.Verify(pk, encSeventy); err != nil {
-		t.Error(err)
-		return
-	}
 
-	encThreeThousandFiveHundred, zkp, err := pk.Mul(encFifty, encSeventy)
+	encThreeThousandFiveHundred, err := pk.Mul(encFifty, encSeventy)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := zkp.Verify(pk, encThreeThousandFiveHundred); err != nil {
-		t.Error(err)
-		return
-	}
-
-	encFourteenThousand, zkp, err := pk.MulConstL2(encThreeThousandFiveHundred, four)
+	encFourteenThousand, err := pk.MulConstL2(encThreeThousandFiveHundred, four)
 	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	if err := zkp.Verify(pk, encFourteenThousand); err != nil {
 		t.Error(err)
 		return
 	}
@@ -388,7 +321,7 @@ func TestL2TCPaillier_MulConstL2(t *testing.T) {
 		return
 	}
 	if decrypted.Cmp(fourteenThousand) != 0 {
-		t.Errorf("Error Decrypting:\nDecrypted = %s\n Expected = %s\n   Module = %s", decrypted, threeThousandFiveHundred, pk.PK.N)
+		t.Errorf("Error Decrypting:\nDecrypted = %s\n Expected = %s\n   Module = %s", decrypted, threeThousandFiveHundred, pk.Paillier.N)
 		return
 	}
 }

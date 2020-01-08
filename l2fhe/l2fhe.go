@@ -36,11 +36,22 @@ func NewKey(msgBitSize int, l, k uint8, randSource io.Reader) (pubKey *PubKey, k
 // Encrypt encrypts a value using TCPaillier and Catalano-Fiore, generating
 // a Level-1 value. It returns also the random value used to encrypt.
 func (l *PubKey) Encrypt(m *big.Int) (e *EncryptedL1, r *big.Int, err error) {
+	r, err = l.Paillier.RandomModNToSPlusOneStar()
+	if err != nil {
+		return
+	}
+	e, err = l.EncryptFixed(m, r)
+	return
+}
+
+// Encrypt encrypts a value using TCPaillier and Catalano-Fiore, generating
+// a Level-1 value, using a defined randomness.
+func (l *PubKey) EncryptFixed(m, r *big.Int) (e *EncryptedL1, err error) {
 	b, err := rand.Int(l.Paillier.RandSource, l.MaxMessageModule)
 	if err != nil {
 		return
 	}
-	encB, r, err := l.Paillier.Encrypt(b)
+	encB, err := l.Paillier.EncryptFixed(b, r)
 	if err != nil {
 		return
 	}

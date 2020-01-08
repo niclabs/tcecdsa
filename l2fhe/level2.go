@@ -75,9 +75,10 @@ func (l *PubKey) AddL2(cList ...*EncryptedL2) (sum *EncryptedL2, err error) {
 }
 
 // MulConstL2 multiplies an Encrypted Level-2 value by a constant.
+// The encryption is deterministic.
 // TODO: check if we can use the normal zkproofs to create a zkproof for this case. Meanwhile, we have no ZKProofs.
 func (l *PubKey) MulConstL2(c *EncryptedL2, cons *big.Int) (mul *EncryptedL2, err error) {
-	mulAlpha, _, err := l.Paillier.Multiply(c.Alpha, cons)
+	mulAlpha, err := l.Paillier.MultiplyFixed(c.Alpha, cons, one)
 	if err != nil {
 		return
 	}
@@ -87,7 +88,7 @@ func (l *PubKey) MulConstL2(c *EncryptedL2, cons *big.Int) (mul *EncryptedL2, er
 	}
 
 	for _, betaPair := range c.Betas {
-		mulBeta1, _, err2 := l.Paillier.Multiply(betaPair.Beta1, cons)
+		mulBeta1, err2 := l.Paillier.MultiplyFixed(betaPair.Beta1, cons, one)
 		if err2 != nil {
 			err = err2
 			return

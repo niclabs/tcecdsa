@@ -38,7 +38,7 @@ func TestL2TCPaillier_Encrypt(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		if zkp.Verify(pk, encFifty, ds) != nil {
+		if zkp.Verify(pk.Paillier, encFifty, ds) != nil {
 			t.Error(err)
 			return
 		}
@@ -90,7 +90,7 @@ func TestL2TCPaillier_AddL1(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		if err := zkp.Verify(pk, encTwelve, ds); err != nil {
+		if err := zkp.Verify(pk.Paillier, encTwelve, ds); err != nil {
 			t.Error(err)
 			return
 		}
@@ -135,7 +135,7 @@ func TestL2TCPaillier_MulConstL1(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		if err := zkp.Verify(pk, encThreeThousandFiveHundred, ds); err != nil {
+		if err := zkp.Verify(pk.Paillier, encThreeThousandFiveHundred, ds); err != nil {
 			t.Error(err)
 			return
 		}
@@ -186,7 +186,7 @@ func TestL2TCPaillier_Mul(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		if err := zkp.Verify(pk, encThreeThousandFiveHundred, ds); err != nil {
+		if err := zkp.Verify(pk.Paillier, encThreeThousandFiveHundred, ds); err != nil {
 			t.Error(err)
 			return
 		}
@@ -250,7 +250,7 @@ func TestL2TCPaillier_AddL2(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		if err := zkp.Verify(pk, encFourteenThousand, ds); err != nil {
+		if err := zkp.Verify(pk.Paillier, encFourteenThousand, ds); err != nil {
 			t.Error(err)
 			return
 		}
@@ -308,7 +308,7 @@ func TestL2TCPaillier_MulConstL2(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		if err := zkp.Verify(pk, encFourteenThousand, ds); err != nil {
+		if err := zkp.Verify(pk.Paillier, encFourteenThousand, ds); err != nil {
 			t.Error(err)
 			return
 		}

@@ -30,18 +30,19 @@ func (L1 *EncryptedL1) Clone() *EncryptedL1 {
 
 // ToPaillier transforms a Level-1 Encrypted value to a PubKey encrypted value,
 // compatible with tcpaillier library.
-func (L1 *EncryptedL1) ToPaillier(pk *PubKey) (c *big.Int, err error) {
+func (L1 *EncryptedL1) ToPaillier(pk *tcpaillier.PubKey) (c *big.Int, err error) {
 	// Create E(m) = E(alpha) + E(b) = E(m-b) + E(b) from c
-	encAlpha, err := pk.Paillier.EncryptFixed(L1.Alpha, one)
+	encAlpha, err := pk.EncryptFixed(L1.Alpha, one)
 	if err != nil {
 		return
 	}
-	c, err = pk.Paillier.Add(L1.Beta, encAlpha)
+	c, err = pk.Add(L1.Beta, encAlpha)
 	return
 }
 
+// Returns a deterministic representation of a L1 value to L2
 func (L1 *EncryptedL1) ToL2(pk *PubKey) (l2 *EncryptedL2, err error) {
-	oneEncrypted, _, err := pk.Encrypt(one)
+	oneEncrypted, _ := pk.EncryptFixed(one, one)
 	return pk.Mul(L1, oneEncrypted)
 }
 
@@ -70,9 +71,10 @@ func (l *PubKey) AddL1(cList ...*EncryptedL1) (sum *EncryptedL1, err error) {
 }
 
 // MulConstL1 multiplies an Encrypted Level-1 value by a constant.
+// The encryption is deterministic.
 // TODO: check if we can use the normal zkproofs to create a zkproof for this case. Meanwhile, we have no ZKProofs.
 func (l *PubKey) MulConstL1(c *EncryptedL1, cons *big.Int) (mul *EncryptedL1, err error) {
-	mulBeta, _, err := l.Paillier.Multiply(c.Beta, cons)
+	mulBeta, err := l.Paillier.MultiplyFixed(c.Beta, cons, one)
 	if err != nil {
 		return
 	}
@@ -120,18 +122,19 @@ func (l *PubKey) CombineSharesL1(shares ...*DecryptedShareL1) (decrypted *big.In
 }
 
 // Mul multiplies two Encrypted Level-1 values and returns an encrypted Level-2 value.
+// The mul encryption is deterministic.
 func (l *PubKey) Mul(c1, c2 *EncryptedL1) (mul *EncryptedL2, err error) {
 	alpha1Alpha2 := new(big.Int).Mul(c1.Alpha, c2.Alpha)
 	alpha1Alpha2.Mod(alpha1Alpha2, l.Paillier.N)
-	a1a2, _, err := l.Paillier.Encrypt(alpha1Alpha2)
+	a1a2, err := l.Paillier.EncryptFixed(alpha1Alpha2, one)
 	if err != nil {
 		return
 	}
-	a2b1, _, err := l.Paillier.Multiply(c1.Beta, c2.Alpha)
+	a2b1, err := l.Paillier.MultiplyFixed(c1.Beta, c2.Alpha, one)
 	if err != nil {
 		return
 	}
-	a1b2, _, err := l.Paillier.Multiply(c2.Beta, c1.Alpha)
+	a1b2, err := l.Paillier.MultiplyFixed(c2.Beta, c1.Alpha, one)
 	if err != nil {
 		return
 	}

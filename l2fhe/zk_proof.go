@@ -32,7 +32,7 @@ type betasZK struct {
 	beta1, beta2 tcpaillier.ZKProof
 }
 
-func (zk *EncryptedL1ZK) Verify(pk *PubKey, vals ...interface{}) error {
+func (zk *EncryptedL1ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) error {
 
 	if len(vals) != 1 {
 		return fmt.Errorf("the extra value for verification should be only one")
@@ -46,11 +46,11 @@ func (zk *EncryptedL1ZK) Verify(pk *PubKey, vals ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	return zk.beta.Verify(pk.Paillier, encM)
+	return zk.beta.Verify(pk, encM)
 }
 
 
-func (zk *DecryptedShareL1ZK) Verify(pk *PubKey, vals ...interface{}) error {
+func (zk *DecryptedShareL1ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) error {
 
 	if len(vals) != 2 {
 		return fmt.Errorf("decryption share verification requires two values")
@@ -63,10 +63,10 @@ func (zk *DecryptedShareL1ZK) Verify(pk *PubKey, vals ...interface{}) error {
 	if !ok {
 		return fmt.Errorf("decryption share verification requires a DecryptedShareL1 as second argument")
 	}
-	return zk.beta.Verify(pk.Paillier, c.Beta, ci.Beta)
+	return zk.beta.Verify(pk, c.Beta, ci.Beta)
 }
 
-func (zk *EncryptedL2ZK) Verify(pk *PubKey, vals ...interface{}) error {
+func (zk *EncryptedL2ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) error {
 
 	if len(vals) != 1 {
 		return fmt.Errorf("the extra value for verification should be only one")
@@ -78,18 +78,18 @@ func (zk *EncryptedL2ZK) Verify(pk *PubKey, vals ...interface{}) error {
 	if len(zk.betas) != len(c.Betas) {
 		return fmt.Errorf("zkproof array length is distinct from beta array length")
 	}
-	if err := zk.alpha.Verify(pk.Paillier, c.Alpha); err != nil {
+	if err := zk.alpha.Verify(pk, c.Alpha); err != nil {
 		return err
 	}
 	for i, beta := range zk.betas {
-		if err := beta.Verify(pk.Paillier, c.Betas[i].Beta1); err != nil {
+		if err := beta.Verify(pk, c.Betas[i].Beta1); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (zk *DecryptedShareL2ZK) Verify(pk *PubKey, vals ...interface{}) error {
+func (zk *DecryptedShareL2ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) error {
 
 	if len(vals) != 2 {
 		return fmt.Errorf("decryption share verification requires two values")
@@ -108,14 +108,14 @@ func (zk *DecryptedShareL2ZK) Verify(pk *PubKey, vals ...interface{}) error {
 	if len(zk.betas) != len(c.Betas) {
 		return fmt.Errorf("zkproof array length is distinct from encrypted betaPair array length")
 	}
-	if err := zk.alpha.Verify(pk.Paillier, c.Alpha, ci.Alpha); err != nil {
+	if err := zk.alpha.Verify(pk, c.Alpha, ci.Alpha); err != nil {
 		return err
 	}
 	for i, betaPair := range zk.betas {
-		if err := betaPair.beta1.Verify(pk.Paillier, c.Betas[i].Beta1, ci.Betas[i].Beta1); err != nil {
+		if err := betaPair.beta1.Verify(pk, c.Betas[i].Beta1, ci.Betas[i].Beta1); err != nil {
 			return err
 		}
-		if err := betaPair.beta2.Verify(pk.Paillier, c.Betas[i].Beta2, ci.Betas[i].Beta2); err != nil {
+		if err := betaPair.beta2.Verify(pk, c.Betas[i].Beta2, ci.Betas[i].Beta2); err != nil {
 			return err
 		}
 	}

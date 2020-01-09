@@ -42,7 +42,7 @@ func (L1 *EncryptedL1) ToPaillier(pk *tcpaillier.PubKey) (c *big.Int, err error)
 
 // Returns a deterministic representation of a L1 value to L2
 func (L1 *EncryptedL1) ToL2(pk *PubKey) (l2 *EncryptedL2, err error) {
-	oneEncrypted, _ := pk.EncryptFixed(one, one)
+	oneEncrypted, _ := pk.EncryptFixedB(one, one, one)
 	return pk.Mul(L1, oneEncrypted)
 }
 

@@ -7,30 +7,46 @@ import (
 	"math/big"
 )
 
+// KeyInitMessage defines a message sent on key generation
 type KeyInitMessage struct {
-	AlphaI *l2fhe.EncryptedL1
-	Yi     *Point
-	Proof  *KeyGenZKProof
-}
-type SigInitMessage struct {
-	Ri         *Point
-	Ui, Vi, Wi *l2fhe.EncryptedL1
-	Proof      *SigZKProof
+	AlphaI *l2fhe.EncryptedL1 // Encrypted private key share by the node
+	Yi     *Point             // Public key share by the node
+	Proof  *KeyGenZKProof     // ZKProof that the value in AlphaI is a valid private key share
 }
 
+// KeyInitMessageList represents a list of KeyInitMessage
+type KeyInitMessageList []*KeyInitMessage
+
+// Round1Message defines a message sent on Signature Initialization (Round1 on this implementation)
+type Round1Message struct {
+	Ri         *Point             // Random point related to the signing process
+	Ui, Vi, Wi *l2fhe.EncryptedL1 // Encrypted u, V and W shares
+	Proof      *SigZKProof        // ZLProof that the values encrypted are valid
+}
+
+// Round1MessageList represents a list of Round1Message
+type Round1MessageList []*Round1Message
+
+// Round2Message defines a message sent on Round 2
 type Round2Message struct {
-	Z     *l2fhe.EncryptedL2
-	PDZ   *l2fhe.DecryptedShareL2
-	Proof tcpaillier.ZKProof
+	PDZ   *l2fhe.DecryptedShareL2 // z Decrypt share.
+	Proof tcpaillier.ZKProof      // Proof that PDZ is a partial decryption of z
 }
 
+// Round2MessageList represents a list of Round2Message
+type Round2MessageList []*Round2Message
+
+// Round3Message defines a message sent on Round 3
 type Round3Message struct {
-	Sigma   *l2fhe.EncryptedL2
-	PDSigma *l2fhe.DecryptedShareL2
-	Proof   tcpaillier.ZKProof
+	PDSigma *l2fhe.DecryptedShareL2 // sigma Decrypt share.
+	Proof   tcpaillier.ZKProof      // Proof that PDSigma is a partial decryption of sigma
 }
 
-func (meta *KeyMeta) joinKeyInit(msgs ...*KeyInitMessage) (alpha *l2fhe.EncryptedL1, y *Point, err error) {
+// Round2MessageList represents a list of Round3Message
+type Round3MessageList []*Round3Message
+
+// Join joins a list of KeyInitMessages and returns the encrypted public key and private keys.
+func (msgs KeyInitMessageList) Join(meta *KeyMeta) (alpha *l2fhe.EncryptedL1, y *Point, err error) {
 	if len(msgs) != int(meta.Paillier.L) {
 		err = fmt.Errorf("number of messages must be equal to participants number L (%d)", meta.Paillier.L)
 		return
@@ -61,7 +77,8 @@ func (meta *KeyMeta) joinKeyInit(msgs ...*KeyInitMessage) (alpha *l2fhe.Encrypte
 	return
 }
 
-func (meta *KeyMeta) joinSigInit(msgs ...*SigInitMessage) (R *Point, u, v, w *l2fhe.EncryptedL1, err error) {
+// Join joins a list of Round1Messages and returns the values r, u, v and w.
+func (msgs Round1MessageList) Join(meta *KeyMeta) (R *Point, u, v, w *l2fhe.EncryptedL1, err error) {
 
 	k := int(meta.Paillier.K)
 	if len(msgs) < k {
@@ -80,13 +97,13 @@ func (meta *KeyMeta) joinSigInit(msgs ...*SigInitMessage) (R *Point, u, v, w *l2
 			msg.Ui != nil &&
 			msg.Vi != nil &&
 			msg.Wi != nil {
-			if err = msg.Proof.Verify(meta, msg.Ri, msg.Vi, msg.Ui, msg.Wi); err == nil {
+			if err = msg.Proof.Verify(meta, msg.Ri, msg.Ui, msg.Vi, msg.Wi); err == nil {
 				rs = append(rs, msg.Ri)
 				vs = append(vs, msg.Vi)
 				us = append(us, msg.Ui)
 				ws = append(ws, msg.Wi)
 			} else {
-				fmt.Errorf("%s", err)
+				return
 			}
 		}
 	}
@@ -120,8 +137,11 @@ func (meta *KeyMeta) joinSigInit(msgs ...*SigInitMessage) (R *Point, u, v, w *l2
 	return
 }
 
-func (meta *KeyMeta) getNu(msgs ...*Round2Message) (nu *big.Int, err error) {
-	if len(msgs) < int(meta.Paillier.K) {
+// Join joins a list of Round2Messages and returns the value nu.
+// The z value required is to check the ZKProofs.
+func (msgs Round2MessageList) Join(meta *KeyMeta, z *l2fhe.EncryptedL2) (nu *big.Int, err error) {
+	k := int(meta.Paillier.K)
+	if len(msgs) < k {
 		err = fmt.Errorf("length of messages should be at least K")
 		return
 	}
@@ -129,13 +149,17 @@ func (meta *KeyMeta) getNu(msgs ...*Round2Message) (nu *big.Int, err error) {
 	for _, msg := range msgs {
 		if msg.Proof != nil &&
 			msg.PDZ != nil {
-			if err = msg.Proof.Verify(meta.Paillier, msg.Z, msg.PDZ); err == nil {
+			if err = msg.Proof.Verify(meta.Paillier, z, msg.PDZ); err == nil {
 				pdZList = append(pdZList, msg.PDZ)
 			}
 		}
 	}
 
-	pdZList = pdZList[:meta.Paillier.K]
+	if len(pdZList) < k  {
+		err = fmt.Errorf("cannot get minimum number of values needed for protocol")
+		return
+	}
+	pdZList = pdZList[:k]
 	nu, err = meta.CombineSharesL2(pdZList...)
 	if err != nil {
 		return
@@ -144,8 +168,11 @@ func (meta *KeyMeta) getNu(msgs ...*Round2Message) (nu *big.Int, err error) {
 	return
 }
 
-func (meta *KeyMeta) getS(msgs ...*Round3Message) (s *big.Int, err error) {
-	if len(msgs) < int(meta.Paillier.K) {
+// Join joins a list of Round3Messages and returns the value s.
+// the sigma value required is to check the ZKProofs.
+func (msgs Round3MessageList) Join(meta *KeyMeta, sigma *l2fhe.EncryptedL2) (s *big.Int, err error) {
+	k := int(meta.Paillier.K)
+	if len(msgs) < int(k) {
 		err = fmt.Errorf("length of messages should be at least K")
 		return
 	}
@@ -153,12 +180,16 @@ func (meta *KeyMeta) getS(msgs ...*Round3Message) (s *big.Int, err error) {
 	for _, msg := range msgs {
 		if msg.Proof != nil &&
 			msg.PDSigma != nil {
-			if err = msg.Proof.Verify(meta.Paillier, msg.Sigma, msg.PDSigma); err == nil {
+			if err = msg.Proof.Verify(meta.Paillier, sigma, msg.PDSigma); err == nil {
 				pdSigmaList = append(pdSigmaList, msg.PDSigma)
 			}
 		}
 	}
-	pdSigmaList = pdSigmaList[:meta.Paillier.K]
+	if len(pdSigmaList) < k  {
+		err = fmt.Errorf("cannot get minimum number of values needed for protocol")
+		return
+	}
+	pdSigmaList = pdSigmaList[:k]
 	s, err = meta.CombineSharesL2(pdSigmaList...)
 	if err != nil {
 		return

@@ -17,10 +17,10 @@ type ZKProofMeta struct {
 }
 
 type SigZKProofParams struct {
-	r                   *Point
-	eta1, eta2, eta3    *big.Int
-	r1, r2, r3          *big.Int
-	encW1, encW2, encW3 *l2fhe.EncryptedL1
+	r                            *Point
+	eta1, eta2, eta3             *big.Int
+	randomVi, randomUi, randomWi *big.Int
+	encVi, encUi, encWi          *l2fhe.EncryptedL1
 }
 
 // KeyGenZKProof represents the parameters for the Key Generation ZKProof.
@@ -236,15 +236,15 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 	h2 := meta.H2
 	nPlusOne := cache.NPlusOne
 
-	w1, err := p.encW1.ToPaillier(meta.PubKey.Paillier)
+	w1, err := p.encVi.ToPaillier(meta.PubKey.Paillier)
 	if err != nil {
 		return
 	}
-	w2, err := p.encW2.ToPaillier(meta.PubKey.Paillier)
+	w2, err := p.encUi.ToPaillier(meta.PubKey.Paillier)
 	if err != nil {
 		return
 	}
-	w3, err := p.encW3.ToPaillier(meta.PubKey.Paillier)
+	w3, err := p.encWi.ToPaillier(meta.PubKey.Paillier)
 	if err != nil {
 		return
 	}
@@ -352,11 +352,11 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 	eHash := hash.Sum(nil)
 	e := new(big.Int).SetBytes(eHash)
 
-	t1 := new(big.Int).Exp(p.r1, e, n)
+	t1 := new(big.Int).Exp(p.randomVi, e, n)
 	t1.Mul(t1, beta1).Mod(t1, n)
-	t2 := new(big.Int).Exp(p.r2, e, n)
+	t2 := new(big.Int).Exp(p.randomUi, e, n)
 	t2.Mul(t2, beta2).Mod(t2, n)
-	t3 := new(big.Int).Exp(p.r3, e, n)
+	t3 := new(big.Int).Exp(p.randomWi, e, n)
 	t3.Mul(t3, beta3).Mod(t3, n)
 
 	s1 := new(big.Int).Mul(e, p.eta1)
@@ -400,21 +400,21 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 //
 func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 	if len(vals) != 4 {
-		return fmt.Errorf("the verification requires three values: r (*Point), w1, w2 and w3 (*l2fhe.EncryptedL1)")
+		return fmt.Errorf("the verification requires three values: r (*Point), vi, ui and wi (*l2fhe.EncryptedL1)")
 	}
 	r, ok := vals[0].(*Point)
 	if !ok {
 		return fmt.Errorf("decryption share verification requires a *Point as first argument")
 	}
-	w1FHE, ok := vals[1].(*l2fhe.EncryptedL1)
-	if !ok {
-		return fmt.Errorf("decryption share verification requires a *EncryptedL1 as second argument")
-	}
-	w2FHE, ok := vals[2].(*l2fhe.EncryptedL1)
+	uiFHE, ok := vals[1].(*l2fhe.EncryptedL1)
 	if !ok {
 		return fmt.Errorf("decryption share verification requires a *EncryptedL1 as third argument")
 	}
-	w3FHE, ok := vals[3].(*l2fhe.EncryptedL1)
+	viFHE, ok := vals[2].(*l2fhe.EncryptedL1)
+	if !ok {
+		return fmt.Errorf("decryption share verification requires a *EncryptedL1 as second argument")
+	}
+	wiFHE, ok := vals[3].(*l2fhe.EncryptedL1)
 	if !ok {
 		return fmt.Errorf("decryption share verification requires a *EncryptedL1 as fourth  argument")
 	}
@@ -431,15 +431,15 @@ func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 
 	g := meta.G()
 
-	w1, err := w1FHE.ToPaillier(meta.PubKey.Paillier)
+	ui, err := uiFHE.ToPaillier(meta.PubKey.Paillier)
 	if err != nil {
 		return err
 	}
-	w2, err := w2FHE.ToPaillier(meta.PubKey.Paillier)
+	vi, err := viFHE.ToPaillier(meta.PubKey.Paillier)
 	if err != nil {
 		return err
 	}
-	w3, err := w3FHE.ToPaillier(meta.PubKey.Paillier)
+	wi, err := wiFHE.ToPaillier(meta.PubKey.Paillier)
 	if err != nil {
 		return err
 	}
@@ -452,7 +452,7 @@ func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 	}
 	u2 := new(big.Int).Exp(nPlusOne, p.s1, nToSPlusOne)
 	u2.Mul(u2, new(big.Int).Exp(p.t1, n, nToSPlusOne)).
-		Mul(u2, new(big.Int).Exp(w1, minusE, nToSPlusOne)).
+		Mul(u2, new(big.Int).Exp(vi, minusE, nToSPlusOne)).
 		Mod(u2, nToSPlusOne)
 
 	if p.u2.Cmp(u2) != 0 {
@@ -461,7 +461,7 @@ func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 
 	u3 := new(big.Int).Exp(nPlusOne, p.s4, nToSPlusOne)
 	u3.Mul(u3, new(big.Int).Exp(p.t2, n, nToSPlusOne)).
-		Mul(u3, new(big.Int).Exp(w2, minusE, nToSPlusOne)).
+		Mul(u3, new(big.Int).Exp(ui, minusE, nToSPlusOne)).
 		Mod(u3, nToSPlusOne)
 
 	if p.u3.Cmp(u3) != 0 {
@@ -470,7 +470,7 @@ func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 
 	u4 := new(big.Int).Exp(nPlusOne, p.s6, nToSPlusOne)
 	u4.Mul(u4, new(big.Int).Exp(p.t3, n, nToSPlusOne)).
-		Mul(u4, new(big.Int).Exp(w3, minusE, nToSPlusOne)).
+		Mul(u4, new(big.Int).Exp(wi, minusE, nToSPlusOne)).
 		Mod(u4, nToSPlusOne)
 
 	if p.u4.Cmp(u4) != 0 {
@@ -508,9 +508,9 @@ func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 	hash.Reset()
 	hash.Write(g.Bytes(meta.Curve))
 	hash.Write(r.Bytes(meta.Curve))
-	hash.Write(w1.Bytes())
-	hash.Write(w2.Bytes())
-	hash.Write(w3.Bytes())
+	hash.Write(vi.Bytes())
+	hash.Write(ui.Bytes())
+	hash.Write(wi.Bytes())
 	// no problem to use provided because their equality was checked before
 	hash.Write(p.z1.Bytes())
 	hash.Write(p.u1.Bytes(meta.Curve))

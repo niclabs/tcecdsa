@@ -9,13 +9,14 @@ import (
 // Status represents the current state of a SigSession
 type Status uint8
 
+// The following consts represent the different status a session could be.
 const (
-	NotInited Status = iota // Session was created
-	Round1                  // Session has passed Round 1
-	Round2                  // Session has passed Round 2
-	Round3                  // Session has passed Round 3
+	NotInited Status = iota // Session was created.
+	Round1                  // Session has passed Round 1.
+	Round2                  // Session has passed Round 2.
+	Round3                  // Session has passed Round 3.
 	Finished                // Session is finished.
-	Undefined Status = iota // Undefined status
+	Undefined Status = iota // Undefined status.
 )
 
 // SigSession represents a set of values saved and used by the participants
@@ -90,7 +91,7 @@ func (state *SigSession) Round1() (msg *Round1Message, err error) {
 	return
 }
 
-/// Round2 uses the values generated in Round1 to generate r and u, a value that is needed for GetSignature
+// Round2 uses the values generated in Round1 to generate r and u, a value that is needed for GetSignature
 // It is Round 3 in paper.
 func (state *SigSession) Round2(msgs Round1MessageList) (msg *Round2Message, err error) {
 	if state.status != Round1 {

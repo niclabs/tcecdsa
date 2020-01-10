@@ -9,9 +9,10 @@ import (
 	"math/big"
 )
 
+// ZKProof represents a Zero Knowledge Proof used by TCECDSA.
 type ZKProof interface {
 	// Verify verifies a ZKProof. It returns nil if the proof is OK, an error if it is not.
-	Verify(meta *KeyMeta, args...interface{}) error
+	Verify(meta *KeyMeta, args ...interface{}) error
 }
 
 // ZKProofMeta contains the RSA parameters required to create ZKProofs.

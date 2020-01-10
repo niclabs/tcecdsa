@@ -10,7 +10,7 @@ type EncryptedL1ZK struct {
 	beta tcpaillier.ZKProof
 }
 
-// EncryptedL1ZK represents a Zero Knowledge Proof over an Partially Decrypted Level-1 FHE value.
+// DecryptedShareL1ZK represents a Zero Knowledge Proof over an Partially Decrypted Level-1 FHE value.
 type DecryptedShareL1ZK struct {
 	beta tcpaillier.ZKProof
 }
@@ -21,7 +21,7 @@ type EncryptedL2ZK struct {
 	betas []tcpaillier.ZKProof
 }
 
-// EncryptedL2ZK represents a Zero Knowledge Proof over an Partially Decrypted Level-2 FHE value.
+// DecryptedShareL2ZK represents a Zero Knowledge Proof over an Partially Decrypted Level-2 FHE value.
 type DecryptedShareL2ZK struct {
 	alpha tcpaillier.ZKProof
 	betas []*betasZK

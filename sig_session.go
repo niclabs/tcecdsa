@@ -22,14 +22,14 @@ const (
 // to generate an specific signature.
 // It is an ephimeral structure and it lives only while the signature is being created.
 type SigSession struct {
-	status                          Status             // Session status
-	r, s                            *big.Int           // Final signature
-	share                           *KeyShare          // KeyShare related to the current signing process
-	meta                            *KeyMeta           // KeyMeta related to the current signing process
-	sigma, z                        *l2fhe.EncryptedL2 // Valqwues needed to check ZKProofs
-	m                               []byte             // Hashed message
-	encM                            *l2fhe.EncryptedL1 // Encrypted hashed message
-	u                               *l2fhe.EncryptedL1 // Value used between rounds 2 and 3 in signing process
+	status   Status             // Session status
+	r, s     *big.Int           // Final signature
+	share    *KeyShare          // KeyShare related to the current signing process
+	meta     *KeyMeta           // KeyMeta related to the current signing process
+	sigma, z *l2fhe.EncryptedL2 // Valqwues needed to check ZKProofs
+	m        []byte             // Hashed message
+	encM     *l2fhe.EncryptedL1 // Encrypted hashed message
+	u        *l2fhe.EncryptedL1 // Value used between rounds 2 and 3 in signing process
 }
 
 // Round1 starts the signing process generating a set of random values and the ZKProof of them.
@@ -118,8 +118,8 @@ func (state *SigSession) Round2(msgs Round1MessageList) (msg *Round2Message, err
 	r := R.X
 
 	msg = &Round2Message{
-		PDZ:    pdZ,
-		Proof:  zkp,
+		PDZ:   pdZ,
+		Proof: zkp,
 	}
 	state.z = z
 	state.status = Round2

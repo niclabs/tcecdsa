@@ -60,7 +60,8 @@ func TestPoint_Add(t *testing.T) {
 	if sum.Cmp(pSum) != 0 {
 		t.Errorf("sub should have been %s but it is %s", pSum, sum)
 		return
-	}}
+	}
+}
 
 func TestPoint_BaseMul(t *testing.T) {
 	baseX, baseY := curve.Params().Gx, curve.Params().Gy

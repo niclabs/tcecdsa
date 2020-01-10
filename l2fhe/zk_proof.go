@@ -5,7 +5,6 @@ import (
 	"github.com/niclabs/tcpaillier"
 )
 
-
 // EncryptedL1ZK represents a Zero Knowledge Proof over an Encrypted Level-1 FHE value.
 type EncryptedL1ZK struct {
 	beta tcpaillier.ZKProof
@@ -48,7 +47,6 @@ func (zk *EncryptedL1ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) erro
 	}
 	return zk.beta.Verify(pk, encM)
 }
-
 
 func (zk *DecryptedShareL1ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) error {
 

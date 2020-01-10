@@ -22,14 +22,14 @@ const (
 // to generate an specific signature.
 // It is an ephimeral structure and it lives only while the signature is being created.
 type SigSession struct {
-	status                 Status             // Session status
-	r, s                   *big.Int           // Final signature
-	share                  *KeyShare          // KeyShare related to the current signing process
-	meta                   *KeyMeta           // KeyMeta related to the current signing process
-	sigma, z               *l2fhe.EncryptedL2 // Values needed to check ZKProofs
-	m                      []byte             // Hashed message
-	encM                   *l2fhe.EncryptedL1 // Encrypted hashed message
-	u                      *l2fhe.EncryptedL1 // Value used between rounds 2 and 3 in signing process
+	status                          Status             // Session status
+	r, s                            *big.Int           // Final signature
+	share                           *KeyShare          // KeyShare related to the current signing process
+	meta                            *KeyMeta           // KeyMeta related to the current signing process
+	sigma, z                        *l2fhe.EncryptedL2 // Valqwues needed to check ZKProofs
+	m                               []byte             // Hashed message
+	encM                            *l2fhe.EncryptedL1 // Encrypted hashed message
+	u                               *l2fhe.EncryptedL1 // Value used between rounds 2 and 3 in signing process
 }
 
 // Round1 starts the signing process generating a set of random values and the ZKProof of them.
@@ -48,12 +48,11 @@ func (state *SigSession) Round1() (msg *Round1Message, err error) {
 		return
 	}
 	qToSix := new(big.Int).Exp(state.meta.Q(), big.NewInt(6), nil)
-	minusQToSix := new(big.Int).Neg(qToSix)
-	c, err := RandomInRange(minusQToSix, qToSix, state.meta.RandomSource())
+	ci, err := RandomInRange(zero, qToSix, state.meta.RandomSource())
 	if err != nil {
 		return
 	}
-	r := NewZero().BaseMul(state.meta.Curve, k)
+	ri := NewZero().BaseMul(state.meta.Curve, k)
 	ui, rui, err := state.meta.Encrypt(rho)
 	if err != nil {
 		return
@@ -62,15 +61,15 @@ func (state *SigSession) Round1() (msg *Round1Message, err error) {
 	if err != nil {
 		return
 	}
-	wi, rwi, err := state.meta.Encrypt(c)
+	wi, rwi, err := state.meta.Encrypt(ci)
 	if err != nil {
 		return
 	}
 	proofParams := &SigZKProofParams{
 		eta1:     k,
 		eta2:     rho,
-		eta3:     c,
-		r:        r,
+		eta3:     ci,
+		ri:       ri,
 		encUi:    ui,
 		encVi:    vi,
 		encWi:    wi,
@@ -81,7 +80,7 @@ func (state *SigSession) Round1() (msg *Round1Message, err error) {
 	proof, err := NewSigZKProof(state.meta, proofParams)
 
 	msg = &Round1Message{
-		Ri:    r,
+		Ri:    ri,
 		Ui:    ui,
 		Vi:    vi,
 		Wi:    wi,
@@ -114,11 +113,13 @@ func (state *SigSession) Round2(msgs Round1MessageList) (msg *Round2Message, err
 	if err != nil {
 		return
 	}
+
 	pdZ, zkp, err := state.meta.PartialDecryptL2(state.share.PaillierShare, z)
 	r := R.X
+
 	msg = &Round2Message{
-		PDZ:   pdZ,
-		Proof: zkp,
+		PDZ:    pdZ,
+		Proof:  zkp,
 	}
 	state.z = z
 	state.status = Round2
@@ -170,7 +171,7 @@ func (state *SigSession) Round3(msgs Round2MessageList) (msg *Round3Message, err
 // It is described in the paper as the joining process of partially decrypted values.
 func (state *SigSession) GetSignature(msgs Round3MessageList) (r, s *big.Int, err error) {
 	if state.status == Finished {
-		// r and s already calculated, return them.
+		// ri and s already calculated, return them.
 		r, s = state.r, state.s
 		return
 	}

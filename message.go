@@ -155,10 +155,11 @@ func (msgs Round2MessageList) Join(meta *KeyMeta, z *l2fhe.EncryptedL2) (nu *big
 		}
 	}
 
-	if len(pdZList) < k  {
+	if len(pdZList) < k {
 		err = fmt.Errorf("cannot get minimum number of values needed for protocol")
 		return
 	}
+
 	pdZList = pdZList[:k]
 	nu, err = meta.CombineSharesL2(pdZList...)
 	if err != nil {
@@ -172,7 +173,7 @@ func (msgs Round2MessageList) Join(meta *KeyMeta, z *l2fhe.EncryptedL2) (nu *big
 // the sigma value required is to check the ZKProofs.
 func (msgs Round3MessageList) Join(meta *KeyMeta, sigma *l2fhe.EncryptedL2) (s *big.Int, err error) {
 	k := int(meta.Paillier.K)
-	if len(msgs) < int(k) {
+	if len(msgs) < k {
 		err = fmt.Errorf("length of messages should be at least K")
 		return
 	}
@@ -185,7 +186,7 @@ func (msgs Round3MessageList) Join(meta *KeyMeta, sigma *l2fhe.EncryptedL2) (s *
 			}
 		}
 	}
-	if len(pdSigmaList) < k  {
+	if len(pdSigmaList) < k {
 		err = fmt.Errorf("cannot get minimum number of values needed for protocol")
 		return
 	}

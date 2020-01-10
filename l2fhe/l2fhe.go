@@ -33,6 +33,21 @@ func NewKey(msgBitSize int, l, k uint8, randSource io.Reader) (pubKey *PubKey, k
 	return
 }
 
+// NewFixedKey returns a new L2FHE Key, based on PubKey Threshold Cryptosystem, using a fixed set of params for tcpaillier.
+func NewFixedKey(msgBitSize int, l, k uint8, randSource io.Reader, params *tcpaillier.FixedParams) (pubKey *PubKey, keyShares []*tcpaillier.KeyShare, err error) {
+	keyShares, pk, err := tcpaillier.NewFixedKey(8*msgBitSize, 1, l, k, randSource, params) // s is fixed to 1 because this is the version the paper uses.
+	if err != nil {
+		return
+	}
+	maxMessageModule := new(big.Int)
+	maxMessageModule.SetBit(maxMessageModule, msgBitSize, 1)
+	pubKey = &PubKey{
+		Paillier:         pk,
+		MaxMessageModule: maxMessageModule,
+	}
+	return
+}
+
 // Encrypt encrypts a value using TCPaillier and Catalano-Fiore, generating
 // a Level-1 value. It returns also the random value used to encrypt.
 func (l *PubKey) Encrypt(m *big.Int) (e *EncryptedL1, r *big.Int, err error) {

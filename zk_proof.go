@@ -17,7 +17,7 @@ type ZKProofMeta struct {
 }
 
 type SigZKProofParams struct {
-	r                            *Point
+	ri                           *Point
 	eta1, eta2, eta3             *big.Int
 	randomVi, randomUi, randomWi *big.Int
 	encVi, encUi, encWi          *l2fhe.EncryptedL1
@@ -336,7 +336,7 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 	hash := meta.Hash
 	hash.Reset()
 	hash.Write(meta.G().Bytes(meta.Curve))
-	hash.Write(p.r.Bytes(meta.Curve))
+	hash.Write(p.ri.Bytes(meta.Curve))
 	hash.Write(w1.Bytes())
 	hash.Write(w2.Bytes())
 	hash.Write(w3.Bytes())
@@ -400,7 +400,7 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 //
 func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 	if len(vals) != 4 {
-		return fmt.Errorf("the verification requires three values: r (*Point), vi, ui and wi (*l2fhe.EncryptedL1)")
+		return fmt.Errorf("the verification requires three values: ri (*Point), vi, ui and wi (*l2fhe.EncryptedL1)")
 	}
 	r, ok := vals[0].(*Point)
 	if !ok {

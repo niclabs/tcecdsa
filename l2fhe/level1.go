@@ -61,6 +61,7 @@ func (l *PubKey) AddL1(cList ...*EncryptedL1) (sum *EncryptedL1, err error) {
 			return
 		}
 		alphaSum = alphaSum.Add(alphaSum, c.Alpha)
+		alphaSum.Mod(alphaSum, l.Paillier.N)
 	}
 
 	sum = &EncryptedL1{
@@ -79,6 +80,7 @@ func (l *PubKey) MulConstL1(c *EncryptedL1, cons *big.Int) (mul *EncryptedL1, er
 		return
 	}
 	mulAlpha := new(big.Int).Mul(c.Alpha, cons)
+	mulAlpha.Mod(mulAlpha, l.Paillier.N)
 	mul = &EncryptedL1{
 		Alpha: mulAlpha,
 		Beta:  mulBeta,

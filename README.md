@@ -13,7 +13,7 @@ This implementation is loosely based on the
 That code is the working example of the work in the paper mentioned earlier.
  
 This code also implements the level-2 homomorphic encryption protocol from Dario Catalano et al,
-[Boosting Linearly-Homomorphic Encryptionto Evaluate Degree-2 Functions on Encrypted Data](https://eprint.iacr.org/2014/813.pdf).
+[Boosting Linearly-Homomorphic Encryption to Evaluate Degree-2 Functions on Encrypted Data](https://eprint.iacr.org/2014/813.pdf).
 
 # Requirements
 

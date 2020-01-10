@@ -1,8 +1,8 @@
 # Threshold Cryptography Eliptic Curve Digital Signature Algorithm
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/niclabs/tcecdsa)](https://goreportcard.com/report/github.com/niclabs/tcecdsa)
-[![Build Status](https://travis-ci.org/niclabs/tcecdsa.svg?branch=master)](https://travis-ci.org/niclabs/tcecdsa)
-[![GoDoc](https://godoc.org/github.com/niclabs/tcecdsa?status.svg)](https://godoc.org/github.com/niclabs/tcecdsa)
+[![Go Report Card](https://goreportcard.com/badge/github.com/niclabs/tcecdsa?a=0)](https://goreportcard.com/report/github.com/niclabs/tcecdsa)
+[![Build Status](https://travis-ci.org/niclabs/tcecdsa.svg?branch=master&a=0)](https://travis-ci.org/niclabs/tcecdsa)
+[![GoDoc](https://godoc.org/github.com/niclabs/tcecdsa?status.svg&a=0)](https://godoc.org/github.com/niclabs/tcecdsa)
 
 Implementation of Threshold Cryptography Eliptic Curve Digital Signature Algorithm proposed on the paper 
 [Using Level-1 Homomorphic Encryption To Improve Threshold DSA Signatures For Bitcoin Wallet Security](http://www.cs.haifa.ac.il/~orrd/LC17/paper72.pdf).

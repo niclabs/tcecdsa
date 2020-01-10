@@ -1,3 +1,6 @@
+// l2fhe module represents a homomorphic encryption scheme based on Catalano-Fiore and Paillier Cryptosystem.
+// this scheme supports multiplication of two level-1 (not previously multiplicated while encrypted) encrypted
+// values, and also the properties of classic Paillier.
 package l2fhe
 
 import (

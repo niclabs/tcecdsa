@@ -6,7 +6,7 @@ import (
 	"math/big"
 )
 
-// status represents the current state of a SigSession
+// Status represents the current state of a SigSession
 type Status uint8
 
 const (
@@ -15,7 +15,7 @@ const (
 	Round2                  // Session has passed Round 2
 	Round3                  // Session has passed Round 3
 	Finished                // Session is finished.
-	Undefined Status = iota
+	Undefined Status = iota // Undefined status
 )
 
 // SigSession represents a set of values saved and used by the participants

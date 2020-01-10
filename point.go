@@ -59,6 +59,7 @@ func (p *Point) Bytes(curve elliptic.Curve) []byte {
 	return elliptic.Marshal(curve, p.X, p.Y)
 }
 
+// SetBytes transforms a byte array into a point, using elliptic.Unmarshal method.
 func (p *Point) SetBytes(curve elliptic.Curve, b []byte) (p2 *Point, err error) {
 	x, y := elliptic.Unmarshal(curve, b)
 	if x == nil {

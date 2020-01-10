@@ -6,13 +6,13 @@ import (
 	"math/big"
 )
 
-// EncryptedL1 represents a Level-2 Encrypted value.
+// EncryptedL2 represents a Level-2 Encrypted value.
 type EncryptedL2 struct {
 	Alpha *big.Int
 	Betas []*Betas
 }
 
-// DecryptedShareL1 represents a Level-1 Decrypted share.
+// DecryptedShareL2 represents a Level-2 Decrypted share.
 type DecryptedShareL2 struct {
 	Alpha *tcpaillier.DecryptionShare
 	Betas []*DecryptedShareBetas

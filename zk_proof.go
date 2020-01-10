@@ -9,6 +9,11 @@ import (
 	"math/big"
 )
 
+type ZKProof interface {
+	// Verify verifies a ZKProof. It returns nil if the proof is OK, an error if it is not.
+	Verify(meta *KeyMeta, args...interface{}) error
+}
+
 // ZKProofMeta contains the RSA parameters required to create ZKProofs.
 type ZKProofMeta struct {
 	NTilde *big.Int // Used in ZK Proofs
@@ -16,6 +21,7 @@ type ZKProofMeta struct {
 	H2     *big.Int // Used in ZK Proofs
 }
 
+// SigZKProofParams groups all the params used on Signing ZKProof.
 type SigZKProofParams struct {
 	ri                           *Point
 	eta1, eta2, eta3             *big.Int
@@ -149,6 +155,8 @@ func newKeyGenZKProof(meta *KeyMeta, xi *big.Int, yi *Point, wFHE *l2fhe.Encrypt
 	return
 }
 
+// Verify verifies a ZKProof of KeyGenZKProof type. It receives the key metainfo and 2 arguments, representing
+// the public key share (a point), and the encrypted private key share.
 func (p *KeyGenZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 	if len(vals) != 2 {
 		return fmt.Errorf("the verification requires three values: yi (*Point) and w (*l2fhe.EncryptedL1)")
@@ -397,7 +405,9 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 	return
 }
 
-//
+// Verify verifies a ZKProof of SigZKProof type. It receives the key metainfo and 4 arguments, representing
+// a random point share used in the signing process, and a three random values encrypted and used as shares of other
+// values of the protocol.
 func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 	if len(vals) != 4 {
 		return fmt.Errorf("the verification requires three values: ri (*Point), vi, ui and wi (*l2fhe.EncryptedL1)")

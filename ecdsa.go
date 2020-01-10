@@ -9,8 +9,9 @@ import (
 	"io"
 )
 
+// NewKeyParams represents a group of params that the metod NewKey can use.
 type NewKeyParams struct {
-	PaillierFixed *tcpaillier.FixedParams
+	PaillierFixed *tcpaillier.FixedParams // Paillier Fixed Params.
 }
 
 // NewKey returns a new distributed key share list, using the specified l (total number of nodes), k (threshold),

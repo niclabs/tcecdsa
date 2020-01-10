@@ -31,6 +31,8 @@ type betasZK struct {
 	beta1, beta2 tcpaillier.ZKProof
 }
 
+// Verify verifies a ZKProof of EncryptedL1ZK type. It receives the public key and 1 argument, representing
+// the value encrypted.
 func (zk *EncryptedL1ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) error {
 
 	if len(vals) != 1 {
@@ -48,6 +50,8 @@ func (zk *EncryptedL1ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) erro
 	return zk.beta.Verify(pk, encM)
 }
 
+// Verify verifies a ZKProof of DecryptedShareL1ZK type. It receives the public key and 2 arguments, representing
+// the value encrypted and the decryption share.
 func (zk *DecryptedShareL1ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) error {
 
 	if len(vals) != 2 {
@@ -64,6 +68,8 @@ func (zk *DecryptedShareL1ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{})
 	return zk.beta.Verify(pk, c.Beta, ci.Beta)
 }
 
+// Verify verifies a ZKProof of EncryptedL2ZK type. It receives the public key and 1 argument, representing
+// the value encrypted.
 func (zk *EncryptedL2ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) error {
 
 	if len(vals) != 1 {
@@ -87,6 +93,8 @@ func (zk *EncryptedL2ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) erro
 	return nil
 }
 
+// Verify verifies a ZKProof of DecryptedShareL2ZK type. It receives the public key and 2 arguments, representing
+// the value encrypted and the decryption share.
 func (zk *DecryptedShareL2ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) error {
 
 	if len(vals) != 2 {

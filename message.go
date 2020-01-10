@@ -42,7 +42,7 @@ type Round3Message struct {
 	Proof   tcpaillier.ZKProof      // Proof that PDSigma is a partial decryption of sigma
 }
 
-// Round2MessageList represents a list of Round3Message
+// Round3MessageList represents a list of Round3Message
 type Round3MessageList []*Round3Message
 
 // Join joins a list of KeyInitMessages and returns the encrypted public key and private keys.

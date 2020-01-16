@@ -3,11 +3,15 @@ package tcecdsa
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"fmt"
 	"github.com/niclabs/tcecdsa/l2fhe"
 	"io"
 	"math/big"
 )
+
+var hash = sha256.New()
+
 
 // ZKProof represents a Zero Knowledge Proof used by TCECDSA.
 type ZKProof interface {
@@ -121,7 +125,6 @@ func newKeyGenZKProof(meta *KeyMeta, xi *big.Int, yi *Point, wFHE *l2fhe.Encrypt
 		return
 	}
 
-	hash := meta.Hash
 	hash.Reset()
 	hash.Write(meta.G().Bytes(meta.Curve))
 	hash.Write(yi.Bytes(meta.Curve))
@@ -198,7 +201,6 @@ func (p *KeyGenZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 	pu3 := new(big.Int).Mul(p.u3, new(big.Int).Exp(p.z, p.e, nTilde))
 	pu3.Mod(pu3, nTilde)
 
-	hash := meta.Hash
 	hash.Reset()
 	hash.Write(meta.G().Bytes(meta.Curve))
 	hash.Write(yi.Bytes(meta.Curve))
@@ -342,7 +344,6 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 	v3 := new(big.Int).Exp(h1, alpha3, nTilde)
 	v3.Mul(v3, new(big.Int).Exp(h2, gamma3, nTilde)).Mod(v3, nTilde)
 
-	hash := meta.Hash
 	hash.Reset()
 	hash.Write(meta.G().Bytes(meta.Curve))
 	hash.Write(p.ri.Bytes(meta.Curve))
@@ -515,7 +516,6 @@ func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 		return fmt.Errorf("zkproof failed (v3)")
 	}
 
-	hash := meta.Hash
 	hash.Reset()
 	hash.Write(g.Bytes(meta.Curve))
 	hash.Write(r.Bytes(meta.Curve))

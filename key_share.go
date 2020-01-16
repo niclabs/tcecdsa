@@ -56,14 +56,11 @@ func (p *KeyShare) SetKey(meta *KeyMeta, msgs KeyInitMessageList) error {
 // NewSigSession creates a new signing session, related to a specific non-empty document.
 // It returns the new signing session and the hashed document, using the hash function defined in keyMeta.
 // The error returned on this function could only be related to the hash encryption.
-func (p *KeyShare) NewSigSession(meta *KeyMeta, doc []byte) (state *SigSession, h []byte, err error) {
-	if len(doc) == 0 {
-		err = fmt.Errorf("empty document")
+func (p *KeyShare) NewSigSession(meta *KeyMeta, h []byte) (state *SigSession, err error) {
+	if len(h) == 0 {
+		err = fmt.Errorf("empty hash")
 		return
 	}
-	meta.Hash.Reset()
-	meta.Hash.Write(doc)
-	h = meta.Hash.Sum(nil)
 	hInt := HashToInt(h, meta.Curve)
 	encM, err := meta.EncryptFixedB(hInt, one, one)
 	if err != nil {

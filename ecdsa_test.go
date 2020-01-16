@@ -37,12 +37,11 @@ func TestNewKey(t *testing.T) {
 		},
 	}
 
-	shares, keyMeta, err := tcecdsa.NewKey(L, K, Curve, Hash, Random, params)
+	shares, keyMeta, err := tcecdsa.NewKey(L, K, Curve, Random, params)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	var h []byte
 	states := make([]*tcecdsa.SigSession, 0)
 	keyInitMessages := make(tcecdsa.KeyInitMessageList, 0)
 	round1Messages := make(tcecdsa.Round1MessageList, 0)
@@ -51,6 +50,10 @@ func TestNewKey(t *testing.T) {
 	rs := make([]*big.Int, 0)
 	ss := make([]*big.Int, 0)
 	var pk *ecdsa.PublicKey
+
+	Hash.Reset()
+	Hash.Write(exampleText)
+	h := Hash.Sum(nil)
 
 	t.Run("KeyGen", func(t *testing.T) {
 		for _, share := range shares {
@@ -86,7 +89,7 @@ func TestNewKey(t *testing.T) {
 	t.Run("NewSigSession", func(t *testing.T) {
 		for _, share := range shares {
 			var state *tcecdsa.SigSession
-			state, h, err = share.NewSigSession(keyMeta, exampleText)
+			state, err = share.NewSigSession(keyMeta, h)
 			if err != nil {
 				t.Error(err)
 				return

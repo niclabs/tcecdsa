@@ -27,7 +27,7 @@ type SigSession struct {
 	r, s     *big.Int           // Final signature
 	share    *KeyShare          // KeyShare related to the current signing process
 	meta     *KeyMeta           // KeyMeta related to the current signing process
-	sigma, z *l2fhe.EncryptedL2 // Valqwues needed to check ZKProofs
+	sigma, z *l2fhe.EncryptedL2 // Values needed to check ZKProofs
 	m        []byte             // Hashed message
 	encM     *l2fhe.EncryptedL1 // Encrypted hashed message
 	u        *l2fhe.EncryptedL1 // Value used between rounds 2 and 3 in signing process

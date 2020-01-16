@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"github.com/niclabs/tcecdsa/l2fhe"
-	"hash"
 	"io"
 	"math/big"
 )
@@ -14,7 +13,6 @@ type KeyMeta struct {
 	*l2fhe.PubKey                // L2FHE Public Key
 	*ZKProofMeta                 // Parameters used by ZK Proofs
 	Curve         elliptic.Curve // Elliptic curve used by the signing protocol
-	Hash          hash.Hash      // Hash used by the signing protocol
 }
 
 // Q returns Curve Subfield bitlength (referred internally as N, but as Q on papers).

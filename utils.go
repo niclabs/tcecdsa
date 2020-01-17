@@ -3,6 +3,7 @@ package tcecdsa
 import (
 	"crypto/elliptic"
 	"crypto/rand"
+	"encoding/asn1"
 	"fmt"
 	"io"
 	"math/big"
@@ -10,6 +11,10 @@ import (
 
 var zero = new(big.Int)
 var one = new(big.Int).SetInt64(1)
+
+type signature struct {
+	r, s *big.Int
+}
 
 // RandomFieldElement returns A random element of the field underlying the given
 // curve using the procedure given in [NSA] A.2.1.
@@ -65,4 +70,22 @@ func HashToInt(hash []byte, c elliptic.Curve) *big.Int {
 		ret.Rsh(ret, uint(excess))
 	}
 	return ret
+}
+
+
+func MarshalSignature(r, s *big.Int) ([]byte, error) {
+	return asn1.Marshal(&signature{r, s})
+}
+
+func UnmarshalSignature(sigByte []byte) (r, s *big.Int, err error) {
+	var sig signature
+	rest, err := asn1.Unmarshal(sigByte, &sig)
+	if len(rest) > 0 {
+		return nil, nil, fmt.Errorf("rest should be empty")
+	}
+	if err != nil {
+		return
+	}
+	r, s = sig.r, sig.s
+	return
 }

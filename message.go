@@ -17,7 +17,7 @@ type KeyInitMessage struct {
 // KeyInitMessageList represents a list of KeyInitMessage
 type KeyInitMessageList []*KeyInitMessage
 
-// Round1Message defines a message sent on Signature Initialization (Round1 on this implementation)
+// Round1Message defines a message sent on signature Initialization (Round1 on this implementation)
 type Round1Message struct {
 	Ri         *Point             // Random point related to the signing process
 	Ui, Vi, Wi *l2fhe.EncryptedL1 // Encrypted u, V and W shares

@@ -6,7 +6,6 @@ package l2fhe
 import (
 	"crypto/rand"
 	"github.com/niclabs/tcpaillier"
-	"io"
 	"math/big"
 )
 
@@ -22,8 +21,8 @@ type PubKey struct {
 }
 
 // NewKey returns a new L2FHE Key, based on PubKey Threshold Cryptosystem.
-func NewKey(msgBitSize int, l, k uint8, randSource io.Reader) (pubKey *PubKey, keyShares []*tcpaillier.KeyShare, err error) {
-	keyShares, pk, err := tcpaillier.NewKey(8*msgBitSize, 1, l, k, randSource) // s is fixed to 1 because this is the version the paper uses.
+func NewKey(msgBitSize int, l, k uint8) (pubKey *PubKey, keyShares []*tcpaillier.KeyShare, err error) {
+	keyShares, pk, err := tcpaillier.NewKey(8*msgBitSize, 1, l, k) // s is fixed to 1 because this is the version the paper uses.
 	if err != nil {
 		return
 	}
@@ -37,8 +36,8 @@ func NewKey(msgBitSize int, l, k uint8, randSource io.Reader) (pubKey *PubKey, k
 }
 
 // NewFixedKey returns a new L2FHE Key, based on PubKey Threshold Cryptosystem, using a fixed set of params for tcpaillier.
-func NewFixedKey(msgBitSize int, l, k uint8, randSource io.Reader, params *tcpaillier.FixedParams) (pubKey *PubKey, keyShares []*tcpaillier.KeyShare, err error) {
-	keyShares, pk, err := tcpaillier.NewFixedKey(8*msgBitSize, 1, l, k, randSource, params) // s is fixed to 1 because this is the version the paper uses.
+func NewFixedKey(msgBitSize int, l, k uint8, params *tcpaillier.FixedParams) (pubKey *PubKey, keyShares []*tcpaillier.KeyShare, err error) {
+	keyShares, pk, err := tcpaillier.NewFixedKey(8*msgBitSize, 1, l, k, params) // s is fixed to 1 because this is the version the paper uses.
 	if err != nil {
 		return
 	}
@@ -65,7 +64,7 @@ func (l *PubKey) Encrypt(m *big.Int) (e *EncryptedL1, r *big.Int, err error) {
 // EncryptFixed encrypts a value using TCPaillier and Catalano-Fiore, generating
 // a Level-1 value, using a defined randomness.
 func (l *PubKey) EncryptFixed(m, r *big.Int) (e *EncryptedL1, err error) {
-	b, err := rand.Int(l.Paillier.RandSource, l.MaxMessageModule)
+	b, err := rand.Int(rand.Reader, l.MaxMessageModule)
 	if err != nil {
 		return
 	}

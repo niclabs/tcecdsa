@@ -73,7 +73,7 @@ func (msgs KeyInitMessageList) Join(meta *KeyMeta) (alpha *l2fhe.EncryptedL1, y 
 	if err != nil {
 		return
 	}
-	y = NewZero().Add(meta.Curve, yiList...)
+	y = NewZero().Add(meta.Curve(), yiList...)
 	return
 }
 
@@ -121,7 +121,7 @@ func (msgs Round1MessageList) Join(meta *KeyMeta) (R *Point, u, v, w *l2fhe.Encr
 	vs = vs[:meta.Paillier.K]
 	ws = ws[:meta.Paillier.K]
 
-	R = NewZero().Add(meta.Curve, rs...)
+	R = NewZero().Add(meta.Curve(), rs...)
 	u, err = meta.AddL1(us...)
 	if err != nil {
 		return

@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"github.com/niclabs/tcecdsa/l2fhe"
-	"io"
 	"math/big"
 )
 
@@ -55,17 +54,17 @@ type SigZKProof struct {
 }
 
 // genZKProofMeta returns a new ZKProofMeta with random parameters, based on the given reader.
-func genZKProofMeta(reader io.Reader) (*ZKProofMeta, error) {
-	sk, err := rsa.GenerateKey(reader, 2048)
+func genZKProofMeta() (*ZKProofMeta, error) {
+	sk, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, err
 	}
 	nTilde := sk.N
-	h1, err := rand.Int(reader, nTilde)
+	h1, err := rand.Int(rand.Reader, nTilde)
 	if err != nil {
 		return nil, err
 	}
-	h2, err := rand.Int(reader, nTilde)
+	h2, err := rand.Int(rand.Reader, nTilde)
 	if err != nil {
 		return nil, err
 	}
@@ -90,19 +89,19 @@ func newKeyGenZKProof(meta *KeyMeta, xi *big.Int, yi *Point, wFHE *l2fhe.Encrypt
 	qnTilde := new(big.Int).Mul(q, nTilde)
 	qToThreeNTilde := new(big.Int).Mul(qToThree, nTilde)
 
-	alpha, err := RandomInRange(one, qToThree, meta.RandomSource())
+	alpha, err := RandomInRange(one, qToThree)
 	if err != nil {
 		return
 	}
-	beta, err := RandomInRange(one, n, meta.RandomSource())
+	beta, err := RandomInRange(one, n)
 	if err != nil {
 		return
 	}
-	rho, err := RandomInRange(one, qnTilde, meta.RandomSource())
+	rho, err := RandomInRange(one, qnTilde)
 	if err != nil {
 		return
 	}
-	gamma, err := RandomInRange(one, qToThreeNTilde, meta.RandomSource())
+	gamma, err := RandomInRange(one, qToThreeNTilde)
 	if err != nil {
 		return
 	}
@@ -110,7 +109,7 @@ func newKeyGenZKProof(meta *KeyMeta, xi *big.Int, yi *Point, wFHE *l2fhe.Encrypt
 	z := new(big.Int).Exp(h1, xi, nTilde)
 	z.Mul(z, new(big.Int).Exp(h2, rho, nTilde)).Mod(z, nTilde)
 
-	u1 := NewZero().BaseMul(meta.Curve, alpha)
+	u1 := NewZero().BaseMul(meta.Curve(), alpha)
 
 	u2 := new(big.Int).Exp(nPlusOne, alpha, nToSPlusOne)
 	u2.Mul(u2, new(big.Int).Exp(beta, n, nToSPlusOne)).
@@ -126,11 +125,11 @@ func newKeyGenZKProof(meta *KeyMeta, xi *big.Int, yi *Point, wFHE *l2fhe.Encrypt
 	}
 
 	hash.Reset()
-	hash.Write(meta.G().Bytes(meta.Curve))
-	hash.Write(yi.Bytes(meta.Curve))
+	hash.Write(meta.G().Bytes(meta.Curve()))
+	hash.Write(yi.Bytes(meta.Curve()))
 	hash.Write(w.Bytes())
 	hash.Write(z.Bytes())
-	hash.Write(u1.Bytes(meta.Curve))
+	hash.Write(u1.Bytes(meta.Curve()))
 	hash.Write(u2.Bytes())
 	hash.Write(u3.Bytes())
 	eHash := hash.Sum(nil)
@@ -186,8 +185,8 @@ func (p *KeyGenZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 		return err
 	}
 
-	u1 := NewZero().BaseMul(meta.Curve, p.s1)
-	pu1 := NewZero().Add(meta.Curve, p.u1, NewZero().Mul(meta.Curve, yi, p.e))
+	u1 := NewZero().BaseMul(meta.Curve(), p.s1)
+	pu1 := NewZero().Add(meta.Curve(), p.u1, NewZero().Mul(meta.Curve(), yi, p.e))
 
 	u2 := new(big.Int).Exp(nPlusOne, p.s1, nToSPlusOne)
 	u2.Mul(u2, new(big.Int).Exp(p.s2, n, nToSPlusOne)).
@@ -202,11 +201,11 @@ func (p *KeyGenZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 	pu3.Mod(pu3, nTilde)
 
 	hash.Reset()
-	hash.Write(meta.G().Bytes(meta.Curve))
-	hash.Write(yi.Bytes(meta.Curve))
+	hash.Write(meta.G().Bytes(meta.Curve()))
+	hash.Write(yi.Bytes(meta.Curve()))
 	hash.Write(w.Bytes())
 	hash.Write(p.z.Bytes())
-	hash.Write(p.u1.Bytes(meta.Curve))
+	hash.Write(p.u1.Bytes(meta.Curve()))
 	hash.Write(p.u2.Bytes())
 	hash.Write(p.u3.Bytes())
 	eHash := hash.Sum(nil)
@@ -269,54 +268,54 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 	qToFiveNTilde := new(big.Int).Mul(qToFive, nTilde)
 	qToSevenNTilde := new(big.Int).Mul(qToSeven, nTilde)
 
-	alpha1, err := RandomInRange(zero, qToThree, meta.RandomSource())
+	alpha1, err := RandomInRange(zero, qToThree)
 	if err != nil {
 		return
 	}
-	alpha2, err := RandomInRange(zero, qToThree, meta.RandomSource())
+	alpha2, err := RandomInRange(zero, qToThree)
 	if err != nil {
 		return
 	}
-	alpha3, err := RandomInRange(zero, qToSeven, meta.RandomSource())
-	if err != nil {
-		return
-	}
-
-	beta1, err := RandomInRange(one, n, meta.RandomSource())
-	if err != nil {
-		return
-	}
-	beta2, err := RandomInRange(one, n, meta.RandomSource())
-	if err != nil {
-		return
-	}
-	beta3, err := RandomInRange(one, n, meta.RandomSource())
+	alpha3, err := RandomInRange(zero, qToSeven)
 	if err != nil {
 		return
 	}
 
-	gamma1, err := RandomInRange(zero, qToThreeNTilde, meta.RandomSource())
+	beta1, err := RandomInRange(one, n)
 	if err != nil {
 		return
 	}
-	gamma2, err := RandomInRange(zero, qToThreeNTilde, meta.RandomSource())
+	beta2, err := RandomInRange(one, n)
 	if err != nil {
 		return
 	}
-	gamma3, err := RandomInRange(zero, qToSevenNTilde, meta.RandomSource())
+	beta3, err := RandomInRange(one, n)
 	if err != nil {
 		return
 	}
 
-	rho1, err := RandomInRange(zero, qNTilde, meta.RandomSource())
+	gamma1, err := RandomInRange(zero, qToThreeNTilde)
 	if err != nil {
 		return
 	}
-	rho2, err := RandomInRange(zero, qNTilde, meta.RandomSource())
+	gamma2, err := RandomInRange(zero, qToThreeNTilde)
 	if err != nil {
 		return
 	}
-	rho3, err := RandomInRange(zero, qToFiveNTilde, meta.RandomSource())
+	gamma3, err := RandomInRange(zero, qToSevenNTilde)
+	if err != nil {
+		return
+	}
+
+	rho1, err := RandomInRange(zero, qNTilde)
+	if err != nil {
+		return
+	}
+	rho2, err := RandomInRange(zero, qNTilde)
+	if err != nil {
+		return
+	}
+	rho3, err := RandomInRange(zero, qToFiveNTilde)
 	if err != nil {
 		return
 	}
@@ -328,7 +327,7 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 	z3 := new(big.Int).Exp(h1, p.eta3, nTilde)
 	z3.Mul(z3, new(big.Int).Exp(h2, rho3, nTilde)).Mod(z3, nTilde)
 
-	u1 := NewZero().BaseMul(meta.Curve, alpha1)
+	u1 := NewZero().BaseMul(meta.Curve(), alpha1)
 
 	u2 := new(big.Int).Exp(nPlusOne, alpha1, nToSPlusOne)
 	u2.Mul(u2, new(big.Int).Exp(beta1, n, nToSPlusOne)).Mod(u2, nToSPlusOne)
@@ -345,13 +344,13 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 	v3.Mul(v3, new(big.Int).Exp(h2, gamma3, nTilde)).Mod(v3, nTilde)
 
 	hash.Reset()
-	hash.Write(meta.G().Bytes(meta.Curve))
-	hash.Write(p.ri.Bytes(meta.Curve))
+	hash.Write(meta.G().Bytes(meta.Curve()))
+	hash.Write(p.ri.Bytes(meta.Curve()))
 	hash.Write(w1.Bytes())
 	hash.Write(w2.Bytes())
 	hash.Write(w3.Bytes())
 	hash.Write(z1.Bytes())
-	hash.Write(u1.Bytes(meta.Curve))
+	hash.Write(u1.Bytes(meta.Curve()))
 	hash.Write(u2.Bytes())
 	hash.Write(u3.Bytes())
 	hash.Write(u4.Bytes())
@@ -456,8 +455,8 @@ func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 		return err
 	}
 
-	u1 := NewZero().Mul(meta.Curve, g, p.s1)
-	pu1 := NewZero().Add(meta.Curve, p.u1, NewZero().Mul(meta.Curve, r, p.e))
+	u1 := NewZero().Mul(meta.Curve(), g, p.s1)
+	pu1 := NewZero().Add(meta.Curve(), p.u1, NewZero().Mul(meta.Curve(), r, p.e))
 
 	if pu1.Cmp(u1) != 0 {
 		return fmt.Errorf("zkproof failed (u1)")
@@ -517,14 +516,14 @@ func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 	}
 
 	hash.Reset()
-	hash.Write(g.Bytes(meta.Curve))
-	hash.Write(r.Bytes(meta.Curve))
+	hash.Write(g.Bytes(meta.Curve()))
+	hash.Write(r.Bytes(meta.Curve()))
 	hash.Write(vi.Bytes())
 	hash.Write(ui.Bytes())
 	hash.Write(wi.Bytes())
 	// no problem to use provided because their equality was checked before
 	hash.Write(p.z1.Bytes())
-	hash.Write(p.u1.Bytes(meta.Curve))
+	hash.Write(p.u1.Bytes(meta.Curve()))
 	hash.Write(p.u2.Bytes())
 	hash.Write(p.u3.Bytes())
 	hash.Write(p.u4.Bytes())

@@ -1,7 +1,6 @@
 package l2fhe_test
 
 import (
-	"crypto/rand"
 	"fmt"
 	"github.com/niclabs/tcecdsa"
 	"github.com/niclabs/tcecdsa/l2fhe"
@@ -27,7 +26,7 @@ var minusOneHundredTwenty = big.NewInt(-120)
 var minusThreeThousandFiveHundred = big.NewInt(-3500)
 
 func TestL2TCPaillier_Encrypt(t *testing.T) {
-	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k)
 	if err != nil {
 		t.Error(err)
 		return
@@ -66,7 +65,7 @@ func TestL2TCPaillier_Encrypt(t *testing.T) {
 }
 
 func TestL2TCPaillier_EncryptMinus(t *testing.T) {
-	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k)
 	if err != nil {
 		t.Error(err)
 		return
@@ -105,7 +104,7 @@ func TestL2TCPaillier_EncryptMinus(t *testing.T) {
 }
 
 func TestL2TCPaillier_AddL1(t *testing.T) {
-	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k)
 	if err != nil {
 		t.Error(err)
 		return
@@ -155,7 +154,7 @@ func TestL2TCPaillier_AddL1(t *testing.T) {
 }
 
 func TestL2TCPaillier_AddL1Negative(t *testing.T) {
-	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k)
 	if err != nil {
 		t.Error(err)
 		return
@@ -171,7 +170,7 @@ func TestL2TCPaillier_AddL1Negative(t *testing.T) {
 	var decryptedRandSum *big.Int
 
 	for i := 0; i < len(keyShares); i++ {
-		randoms[i], err = tcecdsa.RandomInRange(big.NewInt(-1000), new(big.Int), rand.Reader)
+		randoms[i], err = tcecdsa.RandomInRange(big.NewInt(-1000), new(big.Int))
 		if err != nil {
 			t.Error(err)
 			return
@@ -220,7 +219,7 @@ func TestL2TCPaillier_AddL1Negative(t *testing.T) {
 }
 
 func TestL2TCPaillier_MulConstL1(t *testing.T) {
-	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k)
 	if err != nil {
 		t.Error(err)
 		return
@@ -264,7 +263,7 @@ func TestL2TCPaillier_MulConstL1(t *testing.T) {
 }
 
 func TestL2TCPaillier_MulConstL1Minus(t *testing.T) {
-	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k)
 	if err != nil {
 		t.Error(err)
 		return
@@ -308,7 +307,7 @@ func TestL2TCPaillier_MulConstL1Minus(t *testing.T) {
 }
 
 func TestL2TCPaillier_Mul(t *testing.T) {
-	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k)
 	if err != nil {
 		t.Error(err)
 		return
@@ -358,7 +357,7 @@ func TestL2TCPaillier_Mul(t *testing.T) {
 }
 
 func TestL2TCPaillier_AddL2(t *testing.T) {
-	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k)
 	if err != nil {
 		t.Error(err)
 		return
@@ -420,7 +419,7 @@ func TestL2TCPaillier_AddL2(t *testing.T) {
 }
 
 func TestL2TCPaillier_MulConstL2(t *testing.T) {
-	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k, rand.Reader)
+	pk, keyShares, err := l2fhe.NewKey(bitSize, l, k)
 	if err != nil {
 		t.Error(err)
 		return

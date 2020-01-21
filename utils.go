@@ -16,13 +16,20 @@ type signature struct {
 	r, s *big.Int
 }
 
+var CurveNameToCurve = map[string]elliptic.Curve{
+	"P-224": elliptic.P224(),
+	"P-256": elliptic.P256(),
+	"P-384": elliptic.P384(),
+	"P-521": elliptic.P521(),
+}
+
 // RandomFieldElement returns A random element of the field underlying the given
 // curve using the procedure given in [NSA] A.2.1.
 // Taken from Golang ECDSA implementation
-func RandomFieldElement(c elliptic.Curve, rand io.Reader) (k *big.Int, err error) {
+func RandomFieldElement(c elliptic.Curve) (k *big.Int, err error) {
 	params := c.Params()
 	b := make([]byte, params.BitSize/8+8)
-	_, err = io.ReadFull(rand, b)
+	_, err = io.ReadFull(rand.Reader, b)
 	if err != nil {
 		return
 	}
@@ -35,13 +42,13 @@ func RandomFieldElement(c elliptic.Curve, rand io.Reader) (k *big.Int, err error
 }
 
 // RandomInRange returns a number between an interval [min, max).
-func RandomInRange(min, max *big.Int, randSource io.Reader) (r *big.Int, err error) {
+func RandomInRange(min, max *big.Int) (r *big.Int, err error) {
 	if min.Cmp(max) >= 0 {
 		err = fmt.Errorf("min is equal or more than max")
 		return
 	}
 	sub := new(big.Int).Sub(max, min)
-	r, err = rand.Int(randSource, sub)
+	r, err = rand.Int(rand.Reader, sub)
 	if err != nil {
 		return
 	}
@@ -89,3 +96,4 @@ func UnmarshalSignature(sigByte []byte) (r, s *big.Int, err error) {
 	r, s = sig.r, sig.s
 	return
 }
+

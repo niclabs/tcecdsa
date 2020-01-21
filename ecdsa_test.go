@@ -2,7 +2,6 @@ package tcecdsa_test
 
 import (
 	"crypto/ecdsa"
-	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
 	"github.com/niclabs/tcecdsa"
@@ -16,7 +15,7 @@ const K = 3
 
 var exampleText = []byte("hello world")
 
-var Curve = elliptic.P224()
+var Curve = "P-224"
 var Hash = sha256.New()
 var Random = rand.Reader
 
@@ -37,7 +36,7 @@ func TestNewKey(t *testing.T) {
 		},
 	}
 
-	shares, keyMeta, err := tcecdsa.NewKey(L, K, Curve, Random, params)
+	shares, keyMeta, err := tcecdsa.NewKey(L, K, Curve, params)
 	if err != nil {
 		t.Error(err)
 		return

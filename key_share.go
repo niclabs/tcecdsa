@@ -19,11 +19,11 @@ type KeyShare struct {
 // broadcasted to other participants.
 func (p *KeyShare) Init(meta *KeyMeta) (msg *KeyInitMessage, err error) {
 	var r *big.Int
-	xi, err := RandomFieldElement(meta.Curve, meta.RandomSource())
+	xi, err := RandomFieldElement(meta.Curve())
 	if err != nil {
 		return
 	}
-	yi := NewZero().BaseMul(meta.Curve, xi)
+	yi := NewZero().BaseMul(meta.Curve(), xi)
 	alphai, r, err := meta.Encrypt(xi)
 	if err != nil {
 		return
@@ -61,7 +61,7 @@ func (p *KeyShare) NewSigSession(meta *KeyMeta, h []byte) (state *SigSession, er
 		err = fmt.Errorf("empty hash")
 		return
 	}
-	hInt := HashToInt(h, meta.Curve)
+	hInt := HashToInt(h, meta.Curve())
 	encM, err := meta.EncryptFixedB(hInt, one, one)
 	if err != nil {
 		return

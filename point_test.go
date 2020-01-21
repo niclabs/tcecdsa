@@ -2,7 +2,6 @@ package tcecdsa
 
 import (
 	"crypto/elliptic"
-	"crypto/rand"
 	"github.com/niclabs/tcpaillier"
 	"math/big"
 	"testing"
@@ -10,9 +9,8 @@ import (
 
 var p0 = NewZero()
 var curve = elliptic.P256()
-var random = rand.Reader
-var r1, _ = RandomFieldElement(curve, random)
-var r2, _ = RandomFieldElement(curve, random)
+var r1, _ = RandomFieldElement(curve)
+var r2, _ = RandomFieldElement(curve)
 var p1 = NewZero().BaseMul(curve, r1)
 var p2 = NewZero().BaseMul(curve, r2)
 var pFixed = NewPoint(big.NewInt(6), big.NewInt(4))
@@ -119,7 +117,7 @@ func TestPoint_MulZK(t *testing.T) {
 	q := curve.Params().N
 	qToThree := new(big.Int).Exp(q, big.NewInt(3), nil)
 
-	nu, err := RandomFieldElement(curve, random)
+	nu, err := RandomFieldElement(curve)
 	if err != nil {
 		t.Error(err)
 		return
@@ -127,13 +125,13 @@ func TestPoint_MulZK(t *testing.T) {
 
 	y := NewZero().BaseMul(curve, nu)
 
-	alpha, err := RandomInRange(new(big.Int), qToThree, random)
+	alpha, err := RandomInRange(new(big.Int), qToThree)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	e, err := tcpaillier.RandomInt(256, random) // the hash
+	e, err := tcpaillier.RandomInt(256) // the hash
 	if err != nil {
 		t.Error(err)
 		return

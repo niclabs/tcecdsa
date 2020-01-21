@@ -40,20 +40,20 @@ func (state *SigSession) Round1() (msg *Round1Message, err error) {
 		err = fmt.Errorf("status should be \"Not Inited\" to use this method")
 	}
 	// choose rho_i, k_i random from Z_q, and c_i from [-q^6, q^6]
-	rho, err := RandomInRange(zero, state.meta.Q(), state.meta.RandomSource())
+	rho, err := RandomInRange(zero, state.meta.Q())
 	if err != nil {
 		return
 	}
-	k, err := RandomInRange(zero, state.meta.Q(), state.meta.RandomSource())
+	k, err := RandomInRange(zero, state.meta.Q())
 	if err != nil {
 		return
 	}
 	qToSix := new(big.Int).Exp(state.meta.Q(), big.NewInt(6), nil)
-	ci, err := RandomInRange(zero, qToSix, state.meta.RandomSource())
+	ci, err := RandomInRange(zero, qToSix)
 	if err != nil {
 		return
 	}
-	ri := NewZero().BaseMul(state.meta.Curve, k)
+	ri := NewZero().BaseMul(state.meta.Curve(), k)
 	ui, rui, err := state.meta.Encrypt(rho)
 	if err != nil {
 		return

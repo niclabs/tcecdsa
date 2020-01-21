@@ -3,7 +3,6 @@ package tcecdsa
 import (
 	"fmt"
 	"github.com/niclabs/tcecdsa/l2fhe"
-	"github.com/niclabs/tcpaillier"
 	"math/big"
 )
 
@@ -29,8 +28,8 @@ type Round1MessageList []*Round1Message
 
 // Round2Message defines a message sent on Round 2
 type Round2Message struct {
-	PDZ   *l2fhe.DecryptedShareL2 // z Decrypt share.
-	Proof tcpaillier.ZKProof      // Proof that PDZ is a partial decryption of z
+	PDZ   *l2fhe.DecryptedShareL2 // Z Decrypt share.
+	Proof *l2fhe.DecryptedShareL2ZK      // Proof that PDZ is a partial decryption of Z
 }
 
 // Round2MessageList represents a list of Round2Message
@@ -39,7 +38,7 @@ type Round2MessageList []*Round2Message
 // Round3Message defines a message sent on Round 3
 type Round3Message struct {
 	PDSigma *l2fhe.DecryptedShareL2 // sigma Decrypt share.
-	Proof   tcpaillier.ZKProof      // Proof that PDSigma is a partial decryption of sigma
+	Proof   *l2fhe.DecryptedShareL2ZK      // Proof that PDSigma is a partial decryption of sigma
 }
 
 // Round3MessageList represents a list of Round3Message
@@ -138,7 +137,7 @@ func (msgs Round1MessageList) Join(meta *KeyMeta) (R *Point, u, v, w *l2fhe.Encr
 }
 
 // Join joins a list of Round2Messages and returns the value nu.
-// The z value required is to check the ZKProofs.
+// The Z value required is to check the ZKProofs.
 func (msgs Round2MessageList) Join(meta *KeyMeta, z *l2fhe.EncryptedL2) (nu *big.Int, err error) {
 	k := int(meta.Paillier.K)
 	if len(msgs) < k {

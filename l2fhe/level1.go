@@ -31,7 +31,7 @@ func (L1 *EncryptedL1) Clone() *EncryptedL1 {
 // ToPaillier transforms a Level-1 Encrypted value to a PubKey encrypted value,
 // compatible with tcpaillier library.
 func (L1 *EncryptedL1) ToPaillier(pk *tcpaillier.PubKey) (c *big.Int, err error) {
-	// Create E(m) = E(alpha) + E(b) = E(m-b) + E(b) from c
+	// Create E(m) = E(Alpha) + E(b) = E(m-b) + E(b) from c
 	encAlpha, err := pk.EncryptFixed(L1.Alpha, one)
 	if err != nil {
 		return
@@ -99,7 +99,7 @@ func (l *PubKey) PartialDecryptL1(key *tcpaillier.KeyShare, c *EncryptedL1) (sha
 		Alpha: c.Alpha,
 		Beta:  partialDecryptBeta,
 	}
-	zk = &DecryptedShareL1ZK{beta: zkp}
+	zk = &DecryptedShareL1ZK{Beta: zkp}
 	return
 }
 

@@ -1,3 +1,5 @@
 github.com/niclabs/tcpaillier v0.0.5 h1:9AMAf/f5QckO4JgBTgeDimgLPjELWU/pHDzN8a2gzL4=
 github.com/niclabs/tcpaillier v0.0.5/go.mod h1:PnZgJxcHZFSuXo6oSK6kMABkChr9URTmmGLNjgjkbNs=
 github.com/niclabs/tcpaillier v0.0.6/go.mod h1:PnZgJxcHZFSuXo6oSK6kMABkChr9URTmmGLNjgjkbNs=
+github.com/niclabs/tcpaillier v0.0.7 h1:ArGRwPW6bAhMhBK7L5L1MDRQWLztO2RK8z030XOaKeY=
+github.com/niclabs/tcpaillier v0.0.7/go.mod h1:PnZgJxcHZFSuXo6oSK6kMABkChr9URTmmGLNjgjkbNs=

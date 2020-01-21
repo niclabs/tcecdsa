@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/niclabs/tcecdsa"
 	"github.com/niclabs/tcecdsa/l2fhe"
-	"github.com/niclabs/tcpaillier"
 	"math/big"
 	"testing"
 )
@@ -189,7 +188,7 @@ func TestL2TCPaillier_AddL1Negative(t *testing.T) {
 	}
 
 	for i, share := range keyShares {
-		var zkp tcpaillier.ZKProof
+		var zkp *l2fhe.DecryptedShareL1ZK
 		pdRandSum[i], zkp, err = pk.PartialDecryptL1(share, encryptedRandSum)
 		if err != nil {
 			t.Error(err)

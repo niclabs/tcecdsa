@@ -67,16 +67,16 @@ func (state *SigSession) Round1() (msg *Round1Message, err error) {
 		return
 	}
 	proofParams := &SigZKProofParams{
-		eta1:     k,
-		eta2:     rho,
-		eta3:     ci,
-		ri:       ri,
-		encUi:    ui,
-		encVi:    vi,
-		encWi:    wi,
-		randomUi: rui,
-		randomVi: rvi,
-		randomWi: rwi,
+		Eta1:   k,
+		Eta2:   rho,
+		Eta3:   ci,
+		Ri:     ri,
+		EncUi:  ui,
+		EncVi:  vi,
+		EncWi:  wi,
+		RandUi: rui,
+		RandVi: rvi,
+		RandWi: rwi,
 	}
 	proof, err := NewSigZKProof(state.meta, proofParams)
 
@@ -128,7 +128,7 @@ func (state *SigSession) Round2(msgs Round1MessageList) (msg *Round2Message, err
 	return
 }
 
-// Round3 joins the partially decrypted z of the last round and generates a partial decryption of sigma.
+// Round3 joins the partially decrypted Z of the last round and generates a partial decryption of sigma.
 // It is Round 4 in paper
 func (state *SigSession) Round3(msgs Round2MessageList) (msg *Round3Message, err error) {
 	if state.status != Round2 {
@@ -172,7 +172,7 @@ func (state *SigSession) Round3(msgs Round2MessageList) (msg *Round3Message, err
 // It is described in the paper as the joining process of partially decrypted values.
 func (state *SigSession) GetSignature(msgs Round3MessageList) (r, s *big.Int, err error) {
 	if state.status == Finished {
-		// ri and s already calculated, return them.
+		// Ri and s already calculated, return them.
 		r, s = state.r, state.s
 		return
 	}

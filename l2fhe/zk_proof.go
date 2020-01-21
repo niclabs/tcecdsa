@@ -7,28 +7,28 @@ import (
 
 // EncryptedL1ZK represents a Zero Knowledge Proof over an Encrypted Level-1 FHE value.
 type EncryptedL1ZK struct {
-	beta tcpaillier.ZKProof
+	Beta *tcpaillier.EncryptZK
 }
 
 // DecryptedShareL1ZK represents a Zero Knowledge Proof over an Partially Decrypted Level-1 FHE value.
 type DecryptedShareL1ZK struct {
-	beta tcpaillier.ZKProof
+	Beta *tcpaillier.DecryptShareZK
 }
 
 // EncryptedL2ZK represents a Zero Knowledge Proof over an Encrypted Level-2 FHE value.
 type EncryptedL2ZK struct {
-	alpha tcpaillier.ZKProof
-	betas []tcpaillier.ZKProof
+	Alpha *tcpaillier.EncryptZK
+	Betas []*tcpaillier.EncryptZK
 }
 
 // DecryptedShareL2ZK represents a Zero Knowledge Proof over an Partially Decrypted Level-2 FHE value.
 type DecryptedShareL2ZK struct {
-	alpha tcpaillier.ZKProof
-	betas []*betasZK
+	Alpha *tcpaillier.DecryptShareZK
+	Betas []*BetasZK
 }
 
-type betasZK struct {
-	beta1, beta2 tcpaillier.ZKProof
+type BetasZK struct {
+	Beta1, Beta2 *tcpaillier.DecryptShareZK
 }
 
 // Verify verifies a ZKProof of EncryptedL1ZK type. It receives the public key and 1 argument, representing
@@ -42,12 +42,12 @@ func (zk *EncryptedL1ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) erro
 	if !ok {
 		return fmt.Errorf("decryption share verification requires a *EncryptedL1")
 	}
-	// Create E(m) = E(alpha) + E(b) = E(m-b) + E(b) from c
+	// Create E(m) = E(Alpha) + E(b) = E(m-b) + E(b) from c
 	encM, err := c.ToPaillier(pk)
 	if err != nil {
 		return err
 	}
-	return zk.beta.Verify(pk, encM)
+	return zk.Beta.Verify(pk, encM)
 }
 
 // Verify verifies a ZKProof of DecryptedShareL1ZK type. It receives the public key and 2 arguments, representing
@@ -65,7 +65,7 @@ func (zk *DecryptedShareL1ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{})
 	if !ok {
 		return fmt.Errorf("decryption share verification requires a DecryptedShareL1 as second argument")
 	}
-	return zk.beta.Verify(pk, c.Beta, ci.Beta)
+	return zk.Beta.Verify(pk, c.Beta, ci.Beta)
 }
 
 // Verify verifies a ZKProof of EncryptedL2ZK type. It receives the public key and 1 argument, representing
@@ -79,13 +79,13 @@ func (zk *EncryptedL2ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{}) erro
 	if !ok {
 		return fmt.Errorf("decryption share verification requires a *EncryptedL2")
 	}
-	if len(zk.betas) != len(c.Betas) {
-		return fmt.Errorf("zkproof array length is distinct from beta array length")
+	if len(zk.Betas) != len(c.Betas) {
+		return fmt.Errorf("zkproof array length is distinct from Beta array length")
 	}
-	if err := zk.alpha.Verify(pk, c.Alpha); err != nil {
+	if err := zk.Alpha.Verify(pk, c.Alpha); err != nil {
 		return err
 	}
-	for i, beta := range zk.betas {
+	for i, beta := range zk.Betas {
 		if err := beta.Verify(pk, c.Betas[i].Beta1); err != nil {
 			return err
 		}
@@ -108,20 +108,20 @@ func (zk *DecryptedShareL2ZK) Verify(pk *tcpaillier.PubKey, vals ...interface{})
 	if !ok {
 		return fmt.Errorf("decryption share verification requires a DecryptedShareL2 as second argument")
 	}
-	if len(zk.betas) != len(ci.Betas) {
+	if len(zk.Betas) != len(ci.Betas) {
 		return fmt.Errorf("zkproof array length is distinct from decrypted share betaPair array length")
 	}
-	if len(zk.betas) != len(c.Betas) {
+	if len(zk.Betas) != len(c.Betas) {
 		return fmt.Errorf("zkproof array length is distinct from encrypted betaPair array length")
 	}
-	if err := zk.alpha.Verify(pk, c.Alpha, ci.Alpha); err != nil {
+	if err := zk.Alpha.Verify(pk, c.Alpha, ci.Alpha); err != nil {
 		return err
 	}
-	for i, betaPair := range zk.betas {
-		if err := betaPair.beta1.Verify(pk, c.Betas[i].Beta1, ci.Betas[i].Beta1); err != nil {
+	for i, betaPair := range zk.Betas {
+		if err := betaPair.Beta1.Verify(pk, c.Betas[i].Beta1, ci.Betas[i].Beta1); err != nil {
 			return err
 		}
-		if err := betaPair.beta2.Verify(pk, c.Betas[i].Beta2, ci.Betas[i].Beta2); err != nil {
+		if err := betaPair.Beta2.Verify(pk, c.Betas[i].Beta2, ci.Betas[i].Beta2); err != nil {
 			return err
 		}
 	}

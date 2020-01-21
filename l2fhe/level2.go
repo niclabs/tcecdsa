@@ -18,12 +18,12 @@ type DecryptedShareL2 struct {
 	Betas []*DecryptedShareBetas
 }
 
-// Betas groups two beta values together.
+// Betas groups two Beta values together.
 type Betas struct {
 	Beta1, Beta2 *big.Int
 }
 
-// DecryptedShareBetas groups two beta decryption shares together.
+// DecryptedShareBetas groups two Beta decryption shares together.
 type DecryptedShareBetas struct {
 	Beta1, Beta2 *tcpaillier.DecryptionShare
 }
@@ -109,8 +109,8 @@ func (l *PubKey) PartialDecryptL2(key *tcpaillier.KeyShare, c *EncryptedL2) (sha
 		return
 	}
 	zk = &DecryptedShareL2ZK{
-		alpha: zkpAlpha,
-		betas: make([]*betasZK, 0),
+		Alpha: zkpAlpha,
+		Betas: make([]*BetasZK, 0),
 	}
 	share = &DecryptedShareL2{
 		Alpha: decAlpha,
@@ -131,9 +131,9 @@ func (l *PubKey) PartialDecryptL2(key *tcpaillier.KeyShare, c *EncryptedL2) (sha
 			Beta1: dsBeta1,
 			Beta2: dsBeta2,
 		})
-		zk.betas = append(zk.betas, &betasZK{
-			beta1: zkpBeta1,
-			beta2: zkpBeta2,
+		zk.Betas = append(zk.Betas, &BetasZK{
+			Beta1: zkpBeta1,
+			Beta2: zkpBeta2,
 		})
 
 	}
@@ -151,13 +151,13 @@ func (l *PubKey) CombineSharesL2(shares ...*DecryptedShareL2) (decrypted *big.In
 
 	for i, share := range shares {
 		alphaShares = append(alphaShares, share.Alpha)
-		// Check if all betas have the same length and alpha
+		// Check if all Betas have the same length and Alpha
 		if len(share.Betas) != lenBetas {
-			err = fmt.Errorf("beta length on share %d (%d) is different to the first (%d)", i, len(share.Betas), lenBetas)
+			err = fmt.Errorf("Beta length on share %d (%d) is different to the first (%d)", i, len(share.Betas), lenBetas)
 			return
 		}
 	}
-	// PartialDecryptWithProof each beta
+	// PartialDecryptWithProof each Beta
 	decryptedBetas := make([]*Betas, 0)
 	for i := 0; i < lenBetas; i++ {
 		beta1Shares := make([]*tcpaillier.DecryptionShare, 0)

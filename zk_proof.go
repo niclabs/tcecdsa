@@ -12,12 +12,6 @@ import (
 var hash = sha256.New()
 
 
-// ZKProof represents a Zero Knowledge Proof used by TCECDSA.
-type ZKProof interface {
-	// Verify verifies a ZKProof. It returns nil if the proof is OK, an error if it is not.
-	Verify(meta *KeyMeta, args ...interface{}) error
-}
-
 // ZKProofMeta contains the RSA parameters required to create ZKProofs.
 type ZKProofMeta struct {
 	NTilde *big.Int // Used in ZK Proofs
@@ -27,30 +21,30 @@ type ZKProofMeta struct {
 
 // SigZKProofParams groups all the params used on Signing ZKProof.
 type SigZKProofParams struct {
-	ri                           *Point
-	eta1, eta2, eta3             *big.Int
-	randomVi, randomUi, randomWi *big.Int
-	encVi, encUi, encWi          *l2fhe.EncryptedL1
+	Ri                     *Point
+	Eta1, Eta2, Eta3       *big.Int
+	RandVi, RandUi, RandWi *big.Int
+	EncVi, EncUi, EncWi    *l2fhe.EncryptedL1
 }
 
 // KeyGenZKProof represents the parameters for the Key Generation ZKProof.
 type KeyGenZKProof struct {
-	u1         *Point
-	u2, u3     *big.Int
-	s1, s2, s3 *big.Int
-	e          *big.Int
-	z          *big.Int
+	U1         *Point
+	U2, U3     *big.Int
+	S1, S2, S3 *big.Int
+	E          *big.Int
+	Z          *big.Int
 }
 
 // SigZKProof represents the parameters for the signature ZKProof.
 type SigZKProof struct {
-	u1                     *Point
-	u2, u3, u4             *big.Int
-	z1, z2, z3             *big.Int
-	v1, v2, v3             *big.Int
-	s1, s3, s4, s5, s6, s7 *big.Int
-	t1, t2, t3             *big.Int
-	e                      *big.Int
+	U1                     *Point
+	U2, U3, U4             *big.Int
+	Z1, Z2, Z3             *big.Int
+	V1, V2, V3             *big.Int
+	S1, S3, S4, S5, S6, S7 *big.Int
+	T1, T2, T3             *big.Int
+	E                      *big.Int
 }
 
 // genZKProofMeta returns a new ZKProofMeta with random parameters, based on the given reader.
@@ -146,14 +140,14 @@ func newKeyGenZKProof(meta *KeyMeta, xi *big.Int, yi *Point, wFHE *l2fhe.Encrypt
 	s3.Add(s3, gamma)
 
 	proof = &KeyGenZKProof{
-		z:  z,
-		u1: u1,
-		u2: u2,
-		u3: u3,
-		s1: s1,
-		s2: s2,
-		s3: s3,
-		e:  e,
+		Z:  z,
+		U1: u1,
+		U2: u2,
+		U3: u3,
+		S1: s1,
+		S2: s2,
+		S3: s3,
+		E:  e,
 	}
 	return
 }
@@ -185,48 +179,48 @@ func (p *KeyGenZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 		return err
 	}
 
-	u1 := NewZero().BaseMul(meta.Curve(), p.s1)
-	pu1 := NewZero().Add(meta.Curve(), p.u1, NewZero().Mul(meta.Curve(), yi, p.e))
+	u1 := NewZero().BaseMul(meta.Curve(), p.S1)
+	pu1 := NewZero().Add(meta.Curve(), p.U1, NewZero().Mul(meta.Curve(), yi, p.E))
 
-	u2 := new(big.Int).Exp(nPlusOne, p.s1, nToSPlusOne)
-	u2.Mul(u2, new(big.Int).Exp(p.s2, n, nToSPlusOne)).
+	u2 := new(big.Int).Exp(nPlusOne, p.S1, nToSPlusOne)
+	u2.Mul(u2, new(big.Int).Exp(p.S2, n, nToSPlusOne)).
 		Mod(u2, nToSPlusOne)
-	pu2 := new(big.Int).Mul(p.u2, new(big.Int).Exp(w, p.e, nToSPlusOne))
+	pu2 := new(big.Int).Mul(p.U2, new(big.Int).Exp(w, p.E, nToSPlusOne))
 	pu2.Mod(pu2, nToSPlusOne)
 
-	u3 := new(big.Int).Exp(h1, p.s1, nTilde)
-	u3.Mul(u3, new(big.Int).Exp(h2, p.s3, nTilde)).
+	u3 := new(big.Int).Exp(h1, p.S1, nTilde)
+	u3.Mul(u3, new(big.Int).Exp(h2, p.S3, nTilde)).
 		Mod(u3, nTilde)
-	pu3 := new(big.Int).Mul(p.u3, new(big.Int).Exp(p.z, p.e, nTilde))
+	pu3 := new(big.Int).Mul(p.U3, new(big.Int).Exp(p.Z, p.E, nTilde))
 	pu3.Mod(pu3, nTilde)
 
 	hash.Reset()
 	hash.Write(meta.G().Bytes(meta.Curve()))
 	hash.Write(yi.Bytes(meta.Curve()))
 	hash.Write(w.Bytes())
-	hash.Write(p.z.Bytes())
-	hash.Write(p.u1.Bytes(meta.Curve()))
-	hash.Write(p.u2.Bytes())
-	hash.Write(p.u3.Bytes())
+	hash.Write(p.Z.Bytes())
+	hash.Write(p.U1.Bytes(meta.Curve()))
+	hash.Write(p.U2.Bytes())
+	hash.Write(p.U3.Bytes())
 	eHash := hash.Sum(nil)
 
 	e := new(big.Int).SetBytes(eHash)
 
 	if pu1.Cmp(u1) != 0 {
-		fmt.Println("u1 zkp failed")
+		fmt.Println("U1 zkp failed")
 		//return fmt.Errorf("zkproof failed")
 	}
 	if pu2.Cmp(u2) != 0 {
-		fmt.Println("u2 zkp failed")
+		fmt.Println("U2 zkp failed")
 		//return fmt.Errorf("zkproof failed")
 	}
 	if pu3.Cmp(u3) != 0 {
-		fmt.Println("u3 zkp failed")
+		fmt.Println("U3 zkp failed")
 		//return fmt.Errorf("zkproof failed")
 	}
 
-	if p.e.Cmp(e) != 0 {
-		fmt.Println("e zkp failed")
+	if p.E.Cmp(e) != 0 {
+		fmt.Println("E zkp failed")
 		//return fmt.Errorf("zkproof failed")
 	}
 
@@ -246,15 +240,15 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 	h2 := meta.H2
 	nPlusOne := cache.NPlusOne
 
-	w1, err := p.encVi.ToPaillier(meta.PubKey.Paillier)
+	w1, err := p.EncVi.ToPaillier(meta.PubKey.Paillier)
 	if err != nil {
 		return
 	}
-	w2, err := p.encUi.ToPaillier(meta.PubKey.Paillier)
+	w2, err := p.EncUi.ToPaillier(meta.PubKey.Paillier)
 	if err != nil {
 		return
 	}
-	w3, err := p.encWi.ToPaillier(meta.PubKey.Paillier)
+	w3, err := p.EncWi.ToPaillier(meta.PubKey.Paillier)
 	if err != nil {
 		return
 	}
@@ -320,11 +314,11 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 		return
 	}
 
-	z1 := new(big.Int).Exp(h1, p.eta1, nTilde)
+	z1 := new(big.Int).Exp(h1, p.Eta1, nTilde)
 	z1.Mul(z1, new(big.Int).Exp(h2, rho1, nTilde)).Mod(z1, nTilde)
-	z2 := new(big.Int).Exp(h1, p.eta2, nTilde)
+	z2 := new(big.Int).Exp(h1, p.Eta2, nTilde)
 	z2.Mul(z2, new(big.Int).Exp(h2, rho2, nTilde)).Mod(z2, nTilde)
-	z3 := new(big.Int).Exp(h1, p.eta3, nTilde)
+	z3 := new(big.Int).Exp(h1, p.Eta3, nTilde)
 	z3.Mul(z3, new(big.Int).Exp(h2, rho3, nTilde)).Mod(z3, nTilde)
 
 	u1 := NewZero().BaseMul(meta.Curve(), alpha1)
@@ -345,7 +339,7 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 
 	hash.Reset()
 	hash.Write(meta.G().Bytes(meta.Curve()))
-	hash.Write(p.ri.Bytes(meta.Curve()))
+	hash.Write(p.Ri.Bytes(meta.Curve()))
 	hash.Write(w1.Bytes())
 	hash.Write(w2.Bytes())
 	hash.Write(w3.Bytes())
@@ -361,47 +355,47 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 	eHash := hash.Sum(nil)
 	e := new(big.Int).SetBytes(eHash)
 
-	t1 := new(big.Int).Exp(p.randomVi, e, n)
+	t1 := new(big.Int).Exp(p.RandVi, e, n)
 	t1.Mul(t1, beta1).Mod(t1, n)
-	t2 := new(big.Int).Exp(p.randomUi, e, n)
+	t2 := new(big.Int).Exp(p.RandUi, e, n)
 	t2.Mul(t2, beta2).Mod(t2, n)
-	t3 := new(big.Int).Exp(p.randomWi, e, n)
+	t3 := new(big.Int).Exp(p.RandWi, e, n)
 	t3.Mul(t3, beta3).Mod(t3, n)
 
-	s1 := new(big.Int).Mul(e, p.eta1)
+	s1 := new(big.Int).Mul(e, p.Eta1)
 	s1.Add(s1, alpha1)
 	s3 := new(big.Int).Mul(e, rho1)
 	s3.Add(s3, gamma1)
-	s4 := new(big.Int).Mul(e, p.eta2)
+	s4 := new(big.Int).Mul(e, p.Eta2)
 	s4.Add(s4, alpha2)
 	s5 := new(big.Int).Mul(e, rho2)
 	s5.Add(s5, gamma2)
-	s6 := new(big.Int).Mul(e, p.eta3)
+	s6 := new(big.Int).Mul(e, p.Eta3)
 	s6.Add(s6, alpha3)
 	s7 := new(big.Int).Mul(e, rho3)
 	s7.Add(s7, gamma3)
 
 	proof = &SigZKProof{
-		u1: u1,
-		u2: u2,
-		u3: u3,
-		u4: u4,
-		z1: z1,
-		z2: z2,
-		z3: z3,
-		v1: v1,
-		v2: v2,
-		v3: v3,
-		s1: s1,
-		s3: s3,
-		s4: s4,
-		s5: s5,
-		s6: s6,
-		s7: s7,
-		t1: t1,
-		t2: t2,
-		t3: t3,
-		e:  e,
+		U1: u1,
+		U2: u2,
+		U3: u3,
+		U4: u4,
+		Z1: z1,
+		Z2: z2,
+		Z3: z3,
+		V1: v1,
+		V2: v2,
+		V3: v3,
+		S1: s1,
+		S3: s3,
+		S4: s4,
+		S5: s5,
+		S6: s6,
+		S7: s7,
+		T1: t1,
+		T2: t2,
+		T3: t3,
+		E:  e,
 	}
 	return
 }
@@ -411,7 +405,7 @@ func NewSigZKProof(meta *KeyMeta, p *SigZKProofParams) (proof *SigZKProof, err e
 // values of the protocol.
 func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 	if len(vals) != 4 {
-		return fmt.Errorf("the verification requires three values: ri (*Point), vi, ui and wi (*l2fhe.EncryptedL1)")
+		return fmt.Errorf("the verification requires three values: Ri (*Point), vi, ui and wi (*l2fhe.EncryptedL1)")
 	}
 	r, ok := vals[0].(*Point)
 	if !ok {
@@ -438,7 +432,7 @@ func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 	h1 := meta.H1
 	h2 := meta.H2
 	nPlusOne := cache.NPlusOne
-	minusE := new(big.Int).Neg(p.e)
+	minusE := new(big.Int).Neg(p.E)
 
 	g := meta.G()
 
@@ -455,64 +449,64 @@ func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 		return err
 	}
 
-	u1 := NewZero().Mul(meta.Curve(), g, p.s1)
-	pu1 := NewZero().Add(meta.Curve(), p.u1, NewZero().Mul(meta.Curve(), r, p.e))
+	u1 := NewZero().Mul(meta.Curve(), g, p.S1)
+	pu1 := NewZero().Add(meta.Curve(), p.U1, NewZero().Mul(meta.Curve(), r, p.E))
 
 	if pu1.Cmp(u1) != 0 {
-		return fmt.Errorf("zkproof failed (u1)")
+		return fmt.Errorf("zkproof failed (U1)")
 	}
-	u2 := new(big.Int).Exp(nPlusOne, p.s1, nToSPlusOne)
-	u2.Mul(u2, new(big.Int).Exp(p.t1, n, nToSPlusOne)).
+	u2 := new(big.Int).Exp(nPlusOne, p.S1, nToSPlusOne)
+	u2.Mul(u2, new(big.Int).Exp(p.T1, n, nToSPlusOne)).
 		Mul(u2, new(big.Int).Exp(vi, minusE, nToSPlusOne)).
 		Mod(u2, nToSPlusOne)
 
-	if p.u2.Cmp(u2) != 0 {
-		return fmt.Errorf("zkproof failed (u2)")
+	if p.U2.Cmp(u2) != 0 {
+		return fmt.Errorf("zkproof failed (U2)")
 	}
 
-	u3 := new(big.Int).Exp(nPlusOne, p.s4, nToSPlusOne)
-	u3.Mul(u3, new(big.Int).Exp(p.t2, n, nToSPlusOne)).
+	u3 := new(big.Int).Exp(nPlusOne, p.S4, nToSPlusOne)
+	u3.Mul(u3, new(big.Int).Exp(p.T2, n, nToSPlusOne)).
 		Mul(u3, new(big.Int).Exp(ui, minusE, nToSPlusOne)).
 		Mod(u3, nToSPlusOne)
 
-	if p.u3.Cmp(u3) != 0 {
-		return fmt.Errorf("zkproof failed (u3)")
+	if p.U3.Cmp(u3) != 0 {
+		return fmt.Errorf("zkproof failed (U3)")
 	}
 
-	u4 := new(big.Int).Exp(nPlusOne, p.s6, nToSPlusOne)
-	u4.Mul(u4, new(big.Int).Exp(p.t3, n, nToSPlusOne)).
+	u4 := new(big.Int).Exp(nPlusOne, p.S6, nToSPlusOne)
+	u4.Mul(u4, new(big.Int).Exp(p.T3, n, nToSPlusOne)).
 		Mul(u4, new(big.Int).Exp(wi, minusE, nToSPlusOne)).
 		Mod(u4, nToSPlusOne)
 
-	if p.u4.Cmp(u4) != 0 {
-		return fmt.Errorf("zkproof failed (u4)")
+	if p.U4.Cmp(u4) != 0 {
+		return fmt.Errorf("zkproof failed (U4)")
 	}
 
-	v1 := new(big.Int).Exp(h1, p.s1, nTilde)
-	v1.Mul(v1, new(big.Int).Exp(h2, p.s3, nTilde)).
-		Mul(v1, new(big.Int).Exp(p.z1, minusE, nTilde)).
+	v1 := new(big.Int).Exp(h1, p.S1, nTilde)
+	v1.Mul(v1, new(big.Int).Exp(h2, p.S3, nTilde)).
+		Mul(v1, new(big.Int).Exp(p.Z1, minusE, nTilde)).
 		Mod(v1, nTilde)
 
-	if p.v1.Cmp(v1) != 0 {
-		return fmt.Errorf("zkproof failed (v1)")
+	if p.V1.Cmp(v1) != 0 {
+		return fmt.Errorf("zkproof failed (V1)")
 	}
 
-	v2 := new(big.Int).Exp(h1, p.s4, nTilde)
-	v2.Mul(v2, new(big.Int).Exp(h2, p.s5, nTilde)).
-		Mul(v2, new(big.Int).Exp(p.z2, minusE, nTilde)).
+	v2 := new(big.Int).Exp(h1, p.S4, nTilde)
+	v2.Mul(v2, new(big.Int).Exp(h2, p.S5, nTilde)).
+		Mul(v2, new(big.Int).Exp(p.Z2, minusE, nTilde)).
 		Mod(v2, nTilde)
 
-	if p.v2.Cmp(v2) != 0 {
-		return fmt.Errorf("zkproof failed (v2)")
+	if p.V2.Cmp(v2) != 0 {
+		return fmt.Errorf("zkproof failed (V2)")
 	}
 
-	v3 := new(big.Int).Exp(h1, p.s6, nTilde)
-	v3.Mul(v3, new(big.Int).Exp(h2, p.s7, nTilde)).
-		Mul(v3, new(big.Int).Exp(p.z3, minusE, nTilde)).
+	v3 := new(big.Int).Exp(h1, p.S6, nTilde)
+	v3.Mul(v3, new(big.Int).Exp(h2, p.S7, nTilde)).
+		Mul(v3, new(big.Int).Exp(p.Z3, minusE, nTilde)).
 		Mod(v3, nTilde)
 
-	if p.v3.Cmp(v3) != 0 {
-		return fmt.Errorf("zkproof failed (v3)")
+	if p.V3.Cmp(v3) != 0 {
+		return fmt.Errorf("zkproof failed (V3)")
 	}
 
 	hash.Reset()
@@ -522,19 +516,19 @@ func (p *SigZKProof) Verify(meta *KeyMeta, vals ...interface{}) error {
 	hash.Write(ui.Bytes())
 	hash.Write(wi.Bytes())
 	// no problem to use provided because their equality was checked before
-	hash.Write(p.z1.Bytes())
-	hash.Write(p.u1.Bytes(meta.Curve()))
-	hash.Write(p.u2.Bytes())
-	hash.Write(p.u3.Bytes())
-	hash.Write(p.u4.Bytes())
-	hash.Write(p.v1.Bytes())
-	hash.Write(p.v2.Bytes())
-	hash.Write(p.v3.Bytes())
+	hash.Write(p.Z1.Bytes())
+	hash.Write(p.U1.Bytes(meta.Curve()))
+	hash.Write(p.U2.Bytes())
+	hash.Write(p.U3.Bytes())
+	hash.Write(p.U4.Bytes())
+	hash.Write(p.V1.Bytes())
+	hash.Write(p.V2.Bytes())
+	hash.Write(p.V3.Bytes())
 
 	eHash := hash.Sum(nil)
 	e := new(big.Int).SetBytes(eHash)
 
-	if p.e.Cmp(e) != 0 {
+	if p.E.Cmp(e) != 0 {
 		return fmt.Errorf("zkproof failed (hash)")
 	}
 	return nil

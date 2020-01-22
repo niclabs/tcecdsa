@@ -81,7 +81,7 @@ func HashToInt(hash []byte, c elliptic.Curve) *big.Int {
 
 
 func MarshalSignature(r, s *big.Int) ([]byte, error) {
-	return asn1.Marshal(&Signature{r, s})
+	return asn1.Marshal(Signature{r, s})
 }
 
 func UnmarshalSignature(sigByte []byte) (r, s *big.Int, err error) {

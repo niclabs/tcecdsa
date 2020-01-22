@@ -20,11 +20,11 @@ const (
 )
 
 // SigSession represents a set of values saved and used by the participants
-// to generate an specific signature.
-// It is an ephimeral structure and it lives only while the signature is being created.
+// to generate an specific Signature.
+// It is an ephimeral structure and it lives only while the Signature is being created.
 type SigSession struct {
 	status   Status             // Session status
-	r, s     *big.Int           // Final signature
+	r, s     *big.Int           // Final Signature
 	share    *KeyShare          // KeyShare related to the current signing process
 	meta     *KeyMeta           // KeyMeta related to the current signing process
 	sigma, z *l2fhe.EncryptedL2 // Values needed to check ZKProofs
@@ -91,7 +91,7 @@ func (state *SigSession) Round1() (msg *Round1Message, err error) {
 	return
 }
 
-// Round2 uses the values generated in Round1 to generate r and u, a value that is needed for GetSignature
+// Round2 uses the values generated in Round1 to generate R and u, a value that is needed for GetSignature
 // It is Round 3 in paper.
 func (state *SigSession) Round2(msgs Round1MessageList) (msg *Round2Message, err error) {
 	if state.status != Round1 {
@@ -168,11 +168,11 @@ func (state *SigSession) Round3(msgs Round2MessageList) (msg *Round3Message, err
 	return
 }
 
-// GetSignature joins the last values and returns the signature.
+// GetSignature joins the last values and returns the Signature.
 // It is described in the paper as the joining process of partially decrypted values.
 func (state *SigSession) GetSignature(msgs Round3MessageList) (r, s *big.Int, err error) {
 	if state.status == Finished {
-		// Ri and s already calculated, return them.
+		// Ri and S already calculated, return them.
 		r, s = state.r, state.s
 		return
 	}

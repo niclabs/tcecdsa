@@ -36,7 +36,7 @@ type KeyGenZKProof struct {
 	Z          *big.Int
 }
 
-// SigZKProof represents the parameters for the signature ZKProof.
+// SigZKProof represents the parameters for the Signature ZKProof.
 type SigZKProof struct {
 	U1                     *Point
 	U2, U3, U4             *big.Int

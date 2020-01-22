@@ -41,7 +41,7 @@ func (meta *KeyMeta) G() *Point {
 	}
 }
 
-// GetPublicKey parses the key init messages and returns the public key of the signature scheme.
+// GetPublicKey parses the key init messages and returns the public key of the Signature scheme.
 func (meta *KeyMeta) GetPublicKey(msgs KeyInitMessageList) (pk *ecdsa.PublicKey, err error) {
 	_, y, err := msgs.Join(meta)
 	if err != nil {

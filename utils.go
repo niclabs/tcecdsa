@@ -12,8 +12,8 @@ import (
 var zero = new(big.Int)
 var one = new(big.Int).SetInt64(1)
 
-type signature struct {
-	r, s *big.Int
+type Signature struct {
+	R, S *big.Int
 }
 
 var CurveNameToCurve = map[string]elliptic.Curve{
@@ -59,7 +59,7 @@ func RandomInRange(min, max *big.Int) (r *big.Int, err error) {
 // HashToInt converts a hash value to an integer. There is some disagreement
 // about how this is done. [NSA] suggests that this is done in the obvious
 // manner, but [SECG] truncates the hash to the bit-length of the curve order
-// first. We follow [SECG] because that's what OpenSSL does. Additionally,
+// first. We follow [SECG] because that'S what OpenSSL does. Additionally,
 // OpenSSL right shifts excess bits from the number if the hash is too large
 // and we mirror that too.
 // This function was borrowed from crypto/ecdsa package, and was copied because
@@ -81,11 +81,11 @@ func HashToInt(hash []byte, c elliptic.Curve) *big.Int {
 
 
 func MarshalSignature(r, s *big.Int) ([]byte, error) {
-	return asn1.Marshal(&signature{r, s})
+	return asn1.Marshal(&Signature{r, s})
 }
 
 func UnmarshalSignature(sigByte []byte) (r, s *big.Int, err error) {
-	var sig signature
+	var sig Signature
 	rest, err := asn1.Unmarshal(sigByte, &sig)
 	if len(rest) > 0 {
 		return nil, nil, fmt.Errorf("rest should be empty")
@@ -93,7 +93,7 @@ func UnmarshalSignature(sigByte []byte) (r, s *big.Int, err error) {
 	if err != nil {
 		return
 	}
-	r, s = sig.r, sig.s
+	r, s = sig.R, sig.S
 	return
 }
 

@@ -16,7 +16,7 @@ type KeyInitMessage struct {
 // KeyInitMessageList represents a list of KeyInitMessage
 type KeyInitMessageList []*KeyInitMessage
 
-// Round1Message defines a message sent on signature Initialization (Round1 on this implementation)
+// Round1Message defines a message sent on Signature Initialization (Round1 on this implementation)
 type Round1Message struct {
 	Ri         *Point             // Random point related to the signing process
 	Ui, Vi, Wi *l2fhe.EncryptedL1 // Encrypted u, V and W shares
@@ -76,7 +76,7 @@ func (msgs KeyInitMessageList) Join(meta *KeyMeta) (alpha *l2fhe.EncryptedL1, y 
 	return
 }
 
-// Join joins a list of Round1Messages and returns the values r, u, v and w.
+// Join joins a list of Round1Messages and returns the values R, u, v and w.
 func (msgs Round1MessageList) Join(meta *KeyMeta) (R *Point, u, v, w *l2fhe.EncryptedL1, err error) {
 
 	k := int(meta.Paillier.K)
@@ -168,7 +168,7 @@ func (msgs Round2MessageList) Join(meta *KeyMeta, z *l2fhe.EncryptedL2) (nu *big
 	return
 }
 
-// Join joins a list of Round3Messages and returns the value s.
+// Join joins a list of Round3Messages and returns the value S.
 // the sigma value required is to check the ZKProofs.
 func (msgs Round3MessageList) Join(meta *KeyMeta, sigma *l2fhe.EncryptedL2) (s *big.Int, err error) {
 	k := int(meta.Paillier.K)

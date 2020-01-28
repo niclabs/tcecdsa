@@ -34,3 +34,7 @@ To run the tests you just need to use go test:
 ```bash
 go test github.com/niclabs/tcecdsa
 ```
+
+# Commitments
+
+This library **does not** implement the commitments used in the examples of the paper for distributing the shares between the participants. This is because this library is designed to be used in a synchronous message distribution scheme. For example, we use it the library in the [DTC](https://github.com/niclabs/dtc) project, delegating to the user of the library the task of receiving the shares and send them to all the nodes.

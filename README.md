@@ -17,7 +17,7 @@ This code also implements the level-2 homomorphic encryption protocol from Dario
 
 # Requirements
 
-The only requirement for this library is our [Threshold Paillier Implementation] (https://github.com/niclabs/tcpaillier). It will be downloaded automatically if the module is used with [Go Modules](https://blog.golang.org/using-go-modules)
+The only requirement for this library is our [Threshold Paillier Implementation](https://github.com/niclabs/tcpaillier). It will be downloaded automatically if the module is used with [Go Modules](https://blog.golang.org/using-go-modules)
 
 # Using the library
 
